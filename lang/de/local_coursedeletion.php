@@ -16,12 +16,10 @@ $string['scheduledeletion_help'] = 'Hier kann der Löschprozess gestoppt oder ge
 $string['enddatemustbeinfuture'] = 'Verfalldatum muss heute oder später sein.';
 
 // messages:
-$string['minimum_date_was_forced'] = 'Verfallsdatum automatisch angepasst.';
-$string['mails_will_be_sent'] = 'Erinnerungsmail wird innerhalb von 24 Stunden geschickt werden';
-$string['scheduled_upcoming_events'] = 'Erinnerungsmail: {$a->maildate}<br/>Zum Papierkorb: {$a->stagedate}<br/>Kurs wird gelöscht: {$a->deletiondate}';
+$string['minimum_date_was_forced'] = 'Das Enddatum wurde automatisch auf das nächst mögliche Datum gesetzt.';
+$string['scheduled_upcoming_events'] = 'Ablauf-Erinnerungsmail: {$a->maildate}<br/>Kurs wird in den Papierkorb verschoben: {$a->stagedate}<br/>Kurs wird gelöscht: {$a->deletiondate}';
 $string['already_sent'] = 'Schon versandt';
-$string['mail_sent'] = 'Eine E-mail mit die aktualsierte Datum war am Lehrer/in geschickt';
-
+$string['mail_sent'] = 'Eine E-mail mit den aktualisierten Daten wurde an die Kursraum-Verantwortlichen geschickt';
 
 // notification mails
 $string['mail_will_be_staged_subject'] = 'Ihr Moodle-Kursraum {$a->coursefullname} wird demnächst gelöscht';

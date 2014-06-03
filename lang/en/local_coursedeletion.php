@@ -17,7 +17,6 @@ $string['enddatemustbeinfuture'] = 'The end date must be today or later';
 
 // messages:
 $string['minimum_date_was_forced'] = 'The end date was adjusted to the minimum possible date.';
-$string['mails_will_be_sent'] = 'Notification mails will be sent within the next 24 hours';
 $string['scheduled_upcoming_events'] = 'Expiry reminder mail: {$a->maildate}<br/>Course will be moved to trash: {$a->stagedate}<br/>Course will be deleted: {$a->deletiondate}';
 $string['already_sent'] = 'Already sent';
 $string['mail_sent'] = 'A mail has been sent to teachers with the new dates';
