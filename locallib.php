@@ -321,9 +321,11 @@ class CourseDeletion {
             $course = $rec->course_record;
             $a = new stdClass;
             $a->coursefullname = $course->fullname;
-            $a->courseurl = (new moodle_url('/course/view.php', array('id' => $course->id)))->out();
+            $url1 = new moodle_url('/course/view.php', array('id' => $course->id));
+            $a->courseurl = $url->out();
             $a->contacturl = $this->contact_url();
-            $a->settingsurl = (new moodle_url('/local/coursedeletion/coursesettings.php', array('id' => $course->id)))->out();
+            $url2 = new moodle_url('/local/coursedeletion/coursesettings.php', array('id' => $course->id));
+            $a->settingsurl = $url2->out();
             if ($mailtype != self::MAIL_WAS_DELETED) {
                 $a->stagedate = self::date_course_will_be_staged_for_deletion($rec->enddate)->format('d.m.Y');
                 $a->deletiondate = self::date_course_will_be_deleted($rec->enddate)->format('d.m.Y');
