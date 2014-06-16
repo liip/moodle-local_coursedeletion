@@ -3,6 +3,7 @@ $string['pluginname'] = 'Automatisiertes Kurslöschen';
 $string['coursedeletion'] = 'Automatisiertes Kurslöschen';
 
 $string['coursedeletion:course_autodelete_settings'] = 'Automatisiertes Kurslöschen: Einstellungen für Kurs anpassen';
+$string['workflow_task_name'] = 'Tägliche Workflow';
 
 // course settings:
 $string['coursedeletionsettings'] = 'Kurs löschen';

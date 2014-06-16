@@ -463,7 +463,7 @@ class CourseDeletion {
 
     protected function out($message) {
         if ($this->verbosity) {
-            echo "$message\n";
+            mtrace($message);
         }
     }
 
