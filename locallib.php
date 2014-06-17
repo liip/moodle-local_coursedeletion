@@ -116,20 +116,20 @@ class CourseDeletion {
 
         $this->out('remove_records_for_missing_courses start');
 
-        $orphans = $DB->get_fieldset_sql("
-              SELECT lcd.id
+        $orphans = $DB->get_records_sql("
+              SELECT lcd.*
                 FROM {local_coursedeletion} lcd
            LEFT JOIN {course} c ON lcd.courseid = c.id
                WHERE c.id IS NULL
         ");
 
         if (count($orphans)) {
-            list($in, $params) = $DB->get_in_or_equal($orphans);
+            list($in, $params) = $DB->get_in_or_equal(array_keys($orphans));
             $DB->execute("DELETE FROM {local_coursedeletion} WHERE id $in", $params);
             foreach ($orphans as $orphan) {
-                self::log($orphan, 'removed_orphaned_record', 'removed record for no longer existant course');
+                self::log($orphan, 'course_delete', 'removed record for no longer existant course');
             }
-            $this->out("Records removed for no longer existant courses: " . implode(',', $orphans));
+            $this->out(count($orphans) . " records removed for no longer existant courses");
         }
         $this->out('remove_records_for_missing_courses end');
     }
@@ -147,7 +147,7 @@ class CourseDeletion {
 
         $delstagecontext = context_coursecat::instance($this->deletion_staging_category_id);
         $sql = "
-          SELECT c.id
+          SELECT lcd.*
             FROM {local_coursedeletion} lcd
             JOIN {course} c ON c.id = lcd.courseid
             JOIN {context} ctx ON ctx.contextlevel = :contextlevel AND ctx.instanceid = c.id
@@ -159,21 +159,21 @@ class CourseDeletion {
             'contextlevel' => CONTEXT_COURSE,
             'stage_cat_ctx_path' => "$delstagecontext->path/%"
         );
-        $unstaged = $DB->get_fieldset_sql($sql, $params);
+        $unstaged = $DB->get_records_sql($sql, $params);
 
         if (count($unstaged)) {
-            list($in, $params) = $DB->get_in_or_equal($unstaged, SQL_PARAMS_NAMED);
+            list($in, $params) = $DB->get_in_or_equal(array_keys($unstaged), SQL_PARAMS_NAMED);
             $params['status_scheduled'] = CourseDeletion::STATUS_SCHEDULED;
             $params['enddate'] = CourseDeletion::default_course_end_date();
             $sql = "
                 UPDATE {local_coursedeletion} lcd
                    SET status = :status_scheduled,
                        enddate = :enddate
-                 WHERE courseid $in
+                 WHERE id $in
             ";
             $DB->execute($sql, $params);
-            foreach ($unstaged as $courseid) {
-                self::log($courseid, 'change status of un-staged course', 'status reset from STAGED to SCHEDULED');
+            foreach ($unstaged as $coursedeletion) {
+                self::log($coursedeletion, 'settings_update', 'status reset from STAGED to SCHEDULED');
             }
             $this->out("Un-staged courses: status reset from STAGED to SCHEDULED: " . implode(',', $unstaged));
         }
@@ -214,7 +214,7 @@ class CourseDeletion {
             $DB->execute($sql, $params);
 
             foreach ($records as $rec) {
-                self::log($rec->courseid, 'teachers_prenotified');
+                self::log($rec, 'workflow_notify', 'teachers_prenotified');
                 $this->out("Course $rec->courseid teachers notified of course end");
             }
         }
@@ -249,7 +249,8 @@ class CourseDeletion {
             $this->make_courses_invisible($records);
             $this->move_to_staging_area($records, $deletionstage->id);
             foreach ($records as $rec) {
-                self::log($rec->courseid, 'moved_to_deletion_staging_category');
+                self::log($rec, 'settings_update', 'moved to deletion staging category');
+                self::log($rec, 'workflow_notify', 'teachers_notified_of_move_to_trash');
                 $this->out("Course $rec->courseid moved to deletion staging category");
             }
 
@@ -299,7 +300,7 @@ class CourseDeletion {
                 $courseids = array();
                 foreach ($deleted as $rec) {
                     $courseids[] = $rec->courseid;
-                    self::log($rec->courseid, 'course_deleted');
+                    self::log($rec, 'delete', 'Course deleted');
                     $this->out("Course $rec->courseid deleted");
                 }
                 $DB->delete_records_list('local_coursedeletion', 'courseid', $courseids);
@@ -314,7 +315,7 @@ class CourseDeletion {
         foreach ($delrecords as $rec) {
             if (empty($rec->course_teachers)) {
                 //warn("No teachers found for course id $rec->courseid");
-                self::log($rec->courseid, 'send_mail', "No teachers found for course id $rec->courseid");
+                self::log($rec, 'workflow_notify_error', "No teachers found for course id $rec->courseid");
                 continue;
             }
 
@@ -322,7 +323,7 @@ class CourseDeletion {
             $a = new stdClass;
             $a->coursefullname = $course->fullname;
             $url1 = new moodle_url('/course/view.php', array('id' => $course->id));
-            $a->courseurl = $url->out();
+            $a->courseurl = $url1->out();
             $a->contacturl = $this->contact_url();
             $url2 = new moodle_url('/local/coursedeletion/coursesettings.php', array('id' => $course->id));
             $a->settingsurl = $url2->out();
@@ -338,7 +339,7 @@ class CourseDeletion {
                 $body_html = nl2br(get_string($mailtype . '_body_html', 'local_coursedeletion', $a));
                 if (!email_to_user($user, $from, $subject, $body, $body_html)) {
                     //warn("Unable to send mail to user id $user->id");
-                    self::log($rec->courseid, 'send_mail', "Unable to send mail to user id $user->id");
+                    self::log($rec, 'workflow_notify_error', "Unable to send mail to user id $user->id", $user->id);
                 }
             }
         }
@@ -410,7 +411,7 @@ class CourseDeletion {
                 $deleted[]= $rec;
             } else {
                 //warn("Failed to delete course $rec->courseid");
-                self::log($rec->courseid, 'send_mail', "Failed to delete course $rec->courseid");
+                self::log($rec, 'course_delete_error', "Failed to delete course $rec->courseid");
             }
         }
         //$transaction->allow_commit();
@@ -455,7 +456,7 @@ class CourseDeletion {
                 $record->enddate = $set_to_timestamp;
                 $DB->update_record('local_coursedeletion', $record);
                 $this->out($message);
-                self::log($record->courseid, 'reset_end_date', $message);
+                self::log($record, 'settings_update', $message);
             }
         }
         return $records;
@@ -694,8 +695,24 @@ class CourseDeletion {
         );
     }
 
-    public static function log($courseid, $action, $info = '') {
-        add_to_log($courseid, 'coursedeletion', $action, '', $info);
+    public static function log($coursedeletion, $action, $info = null, $relateduserid=null) {
+        //add_to_log($coursedeletion->courseid, 'coursedeletion', $action, '', $info, 0, $relateduserid);
+        $data = array(
+            'objectid' => $coursedeletion->id,
+            'courseid' => $coursedeletion->courseid,
+            'context'  => context_course::instance($coursedeletion->courseid),
+        );
+        if (!is_null($info)) {
+            $data['other'] = array('detail' => $info);
+        }
+        if (!is_null($relateduserid)) {
+            $data['relateduserid'] = $relateduserid;
+        }
+
+        /* @var \core\event\base @classname */
+        $classname = 'local_coursedeletion\event\\' . $action;
+
+        $classname::create($data)->trigger();
     }
 
     /**
@@ -777,7 +794,7 @@ class CourseDeletion {
 
         if (count($info['changes'])) {
             $DB->update_record('local_coursedeletion', $coursedeletion);
-            self::log($coursedeletion->courseid, 'settings_change', implode(' / ', $info['changes']));
+            self::log($coursedeletion, 'settings_update', implode(' / ', $info['changes']));
         }
 
         return $info;

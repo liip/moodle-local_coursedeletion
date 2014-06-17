@@ -13,6 +13,13 @@ $string['enddate_help'] = 'Three weeks before this date, a reminder will be sent
 $string['scheduledeletion'] = 'Schedule deletion';
 $string['scheduledeletion_help'] = 'This allows starting or stopping the course deletion process.';
 
+// events:
+$string['course_delete'] = 'Delete course';
+$string['course_delete_error'] = 'Error deleting course';
+$string['workflow_notify'] = 'Send notification';
+$string['workflow_notify_error'] = 'Error sending notification';
+$string['settings_update'] = 'Change settings';
+
 // errors:
 $string['enddatemustbeinfuture'] = 'The end date must be today or later';
 

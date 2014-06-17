@@ -13,6 +13,13 @@ $string['enddate_help'] = 'Drei Wochen vor diesem Datum wird eine Erinnerung an 
 $string['scheduledeletion'] = 'Kurs nach Verfalldatum löschen';
 $string['scheduledeletion_help'] = 'Hier kann der Löschprozess gestoppt oder gestartet werden.';
 
+// events:
+$string['course_delete'] = 'Kurs löschen';
+$string['course_delete_error'] = 'Fehler beim Löschen der Kurs';
+$string['workflow_notify'] = 'Notification auslösen';
+$string['workflow_notify_error'] = 'Fehler beim Auslösen der Notification';
+$string['settings_update'] = 'Einstellungen ändern';
+
 // errors:
 $string['enddatemustbeinfuture'] = 'Verfalldatum muss heute oder später sein.';
 
