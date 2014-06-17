@@ -19,7 +19,7 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(CourseDeletion::STATUS_SCHEDULED, $rec->status, "status scheduled");
         $rec->enddate = 1;
         $DB->update_record('local_coursedeletion', $rec);
-        local_coursedeletion_cron(true, 0);
+        $this->run_cron();
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEquals(CourseDeletion::STATUS_SCHEDULED_NOTIFIED, $rec->status, "status changed to notified");
     }
@@ -238,8 +238,7 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         // The course is now not in the deletion staging category, but has STATUS_STAGED_FOR_DELETION.
         // This is the same situation it would be in if it was staged for deletion, but someone
         // moved it out to another category.
-
-        local_coursedeletion_cron(true, 0);
+        $this->run_cron();
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEquals(CourseDeletion::STATUS_SCHEDULED, $rec->status, "status is scheduled");
         $this->assertEquals(CourseDeletion::default_course_end_date(), $rec->enddate, "enddate reset");
@@ -264,7 +263,7 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         // put the course in the deletion staging category
         move_courses(array($this->testcourse->id), $cd->deletion_staging_category_id());
 
-        local_coursedeletion_cron(true, 0);
+        $this->run_cron();
         $course = $DB->get_record('course', array('id' => $this->testcourse->id));
         $this->assertNotEmpty($course, "course still exists");
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
@@ -281,7 +280,7 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         // * enddate should be 3 weeks (or as config-ed) from now
         $rec->enddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_until_staging(true));
         $DB->update_record('local_coursedeletion', $rec);
-        local_coursedeletion_cron(true, 0);
+        $this->run_cron();
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEquals(CourseDeletion::STATUS_SCHEDULED_NOTIFIED, $rec->status, "Status was changed to notified");
         $expected_enddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_until_staging());
@@ -297,7 +296,7 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $new_enddate = CourseDeletion::midnight_timestamp();
         $rec->enddate = $new_enddate;
         $DB->update_record('local_coursedeletion', $rec);
-        local_coursedeletion_cron(true, 0);
+        $this->run_cron();
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEquals(CourseDeletion::STATUS_STAGED_FOR_DELETION, $rec->status, "Status was changed to staged");
         $this->assertEquals($new_enddate, $rec->enddate,
@@ -309,7 +308,7 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $new_enddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_before_deletion(true));
         $rec->enddate = $new_enddate;
         $DB->update_record('local_coursedeletion', $rec);
-        local_coursedeletion_cron(true, 0);
+        $this->run_cron();
         $course = $DB->get_record('course', array('id' => $rec->courseid));
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEmpty($course, "Course should have been deleted");
@@ -330,7 +329,7 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         // * enddate should be 3 weeks (or as config-ed) from now
         $rec->enddate = CourseDeletion::midnight_timestamp();
         $DB->update_record('local_coursedeletion', $rec);
-        local_coursedeletion_cron(true, 0);
+        $this->run_cron();
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEquals(CourseDeletion::STATUS_SCHEDULED_NOTIFIED, $rec->status, "Status was changed to notified");
         $expected_enddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_until_staging());
@@ -347,7 +346,7 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $expected_enddate = CourseDeletion::midnight_timestamp();
         $rec->enddate = $new_enddate->getTimestamp();
         $DB->update_record('local_coursedeletion', $rec);
-        local_coursedeletion_cron(true, 0);
+        $this->run_cron();
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEquals(CourseDeletion::STATUS_STAGED_FOR_DELETION, $rec->status, "Status was changed to staged");
         $this->assertEquals($expected_enddate, $rec->enddate,
@@ -368,6 +367,13 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         }
     }
 
+    static function tearDownAfterClass() {
+        // hacky stuff to make it work without using a separate test db.
+        // recreate db connection before moodle runs it's shutdown, which may access the db.
+        unset ($GLOBALS['DB']);
+        setup_DB();
+    }
+
     protected function default_course_data($shortname) {
         global $CDTESTCONFIG;
         $course = new stdClass;
@@ -383,5 +389,10 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $formvalues->deletionstagedate = $rec->enddate;
         $formvalues->scheduledeletion = $rec->status == CourseDeletion::STATUS_NOT_SCHEDULED ? 0 : 1;
         return $formvalues;
+    }
+
+    protected function run_cron() {
+        $task = new local_coursedeletion\task\workflow();
+        $task->execute(true, 0);
     }
 }

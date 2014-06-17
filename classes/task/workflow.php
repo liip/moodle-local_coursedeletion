@@ -1,6 +1,11 @@
 <?php
 namespace local_coursedeletion\task;
 
+use \CourseDeletion;
+use \set_config;
+use \get_string;
+use \mtrace;
+
 class workflow extends \core\task\scheduled_task {
     public function get_name() {
         // Shown in admin screens

@@ -125,10 +125,17 @@ class CourseDeletion {
 
         if (count($orphans)) {
             list($in, $params) = $DB->get_in_or_equal(array_keys($orphans));
-            $DB->execute("DELETE FROM {local_coursedeletion} WHERE id $in", $params);
             foreach ($orphans as $orphan) {
-                self::log($orphan, 'course_delete', 'removed record for no longer existant course');
+                local_coursedeletion\event\course_delete::create(array(
+                    // record the course id instead of the id of this record
+                    'objectid' => $orphan->courseid,
+                    'other' => array(
+                        'courseid' => $orphan->courseid,
+                        'detail' => 'removed record for no longer existant course'
+                    )
+                ))->trigger();
             }
+            $DB->execute("DELETE FROM {local_coursedeletion} WHERE id $in", $params);
             $this->out(count($orphans) . " records removed for no longer existant courses");
         }
         $this->out('remove_records_for_missing_courses end');
@@ -175,7 +182,8 @@ class CourseDeletion {
             foreach ($unstaged as $coursedeletion) {
                 self::log($coursedeletion, 'settings_update', 'status reset from STAGED to SCHEDULED');
             }
-            $this->out("Un-staged courses: status reset from STAGED to SCHEDULED: " . implode(',', $unstaged));
+            $this->out("Un-staged courses: status reset from STAGED to SCHEDULED: "
+                . implode(',', array_keys($unstaged)));
         }
         $this->out('reset_status_for_unstaged_courses end');
     }
@@ -300,7 +308,15 @@ class CourseDeletion {
                 $courseids = array();
                 foreach ($deleted as $rec) {
                     $courseids[] = $rec->courseid;
-                    self::log($rec, 'delete', 'Course deleted');
+                    // Improved logging interface in 2.7?  Not so sure ...
+                    local_coursedeletion\event\course_delete::create(array(
+                        // record the course id instead of the id of this record
+                        'objectid' => $rec->courseid,
+                        'other' => array(
+                            'courseid' => $rec->courseid,
+                            'detail' => 'Course deleted'
+                        )
+                    ))->trigger();
                     $this->out("Course $rec->courseid deleted");
                 }
                 $DB->delete_records_list('local_coursedeletion', 'courseid', $courseids);
@@ -315,7 +331,14 @@ class CourseDeletion {
         foreach ($delrecords as $rec) {
             if (empty($rec->course_teachers)) {
                 //warn("No teachers found for course id $rec->courseid");
-                self::log($rec, 'workflow_notify_error', "No teachers found for course id $rec->courseid");
+                local_coursedeletion\event\workflow_notify_error::create(array(
+                    // record the course id instead of the id of this record
+                    'objectid' => $rec->courseid,
+                    'other' => array(
+                        'courseid' => $rec->courseid,
+                        'detail' => "No teachers found for course $rec->courseid",
+                    )
+                ))->trigger();
                 continue;
             }
 
@@ -338,8 +361,15 @@ class CourseDeletion {
                 $body = get_string($mailtype . '_body', 'local_coursedeletion', $a);
                 $body_html = nl2br(get_string($mailtype . '_body_html', 'local_coursedeletion', $a));
                 if (!email_to_user($user, $from, $subject, $body, $body_html)) {
-                    //warn("Unable to send mail to user id $user->id");
-                    self::log($rec, 'workflow_notify_error', "Unable to send mail to user id $user->id", $user->id);
+                    local_coursedeletion\event\workflow_notify_error::create(array(
+                        // record the course id instead of the id of this record
+                        'objectid' => $rec->courseid,
+                        'relateduserid' => $user->id,
+                        'other' => array(
+                            'courseid' => $rec->courseid,
+                            'detail' => "Unable to send mail to user id $user->id",
+                        )
+                    ))->trigger();
                 }
             }
         }
@@ -410,7 +440,6 @@ class CourseDeletion {
             if (delete_course($rec->courseid, false)) {
                 $deleted[]= $rec;
             } else {
-                //warn("Failed to delete course $rec->courseid");
                 self::log($rec, 'course_delete_error', "Failed to delete course $rec->courseid");
             }
         }
@@ -695,7 +724,7 @@ class CourseDeletion {
         );
     }
 
-    public static function log($coursedeletion, $action, $info = null, $relateduserid=null) {
+    public static function log($coursedeletion, $action, $info = null) {
         //add_to_log($coursedeletion->courseid, 'coursedeletion', $action, '', $info, 0, $relateduserid);
         $data = array(
             'objectid' => $coursedeletion->id,
@@ -704,9 +733,6 @@ class CourseDeletion {
         );
         if (!is_null($info)) {
             $data['other'] = array('detail' => $info);
-        }
-        if (!is_null($relateduserid)) {
-            $data['relateduserid'] = $relateduserid;
         }
 
         /* @var \core\event\base @classname */
