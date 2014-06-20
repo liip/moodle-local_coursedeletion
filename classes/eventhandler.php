@@ -39,7 +39,9 @@ class eventhandler {
         require_once(__DIR__ . '/../locallib.php');
 
         if (!empty($eventdata->courseid)) {
-            CourseDeletion::create_record($eventdata->courseid);
+            // The course_created signal may have been triggered already, so
+            // remove any existing record, and insert a new record for this course.
+            CourseDeletion::reset_course($eventdata->courseid);
             return true;
         }
         debug("eventdata does not have expected field 'courseid'");

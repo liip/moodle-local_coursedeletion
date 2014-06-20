@@ -652,10 +652,12 @@ class CourseDeletion {
      * @return stdClass
      */
     public static function create_record($courseid, $status = null) {
+        global $DB;
+
         if (is_null($status)) {
             $status = self::STATUS_SCHEDULED;
         }
-        global $DB;
+
         $rec = new stdClass;
         $rec->courseid = $courseid;
         $rec->status = $status;
