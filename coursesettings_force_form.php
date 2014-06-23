@@ -6,6 +6,7 @@ class coursedeletion_coursesettings_force_form extends moodleform{
         $coursedeletion = $this->_customdata['coursedeletion'];
 
         $mform->addElement('hidden', 'id');
+        $mform->setType('id', PARAM_INT);
 
         $strenddate = get_string('enddate', 'local_coursedeletion');
         $startyear = min(date('Y') - 3, date('Y', $coursedeletion->enddate));
