@@ -209,6 +209,7 @@ class CourseDeletion {
                 $staging_time,
                 $staging_time
             );
+            $this->add_course_info($records);
             $this->send_mail_to_teachers($records, self::MAIL_WILL_BE_STAGED_FOR_DELETION);
 
             list($in, $params) = $DB->get_in_or_equal(array_keys($records), SQL_PARAMS_NAMED);
@@ -252,6 +253,7 @@ class CourseDeletion {
         }
         if ($records = $DB->get_records_sql($sql, $params)) {
             $records = $this->reset_enddates($records, $expected_end_date, $expected_end_date);
+            $this->add_course_info($records);
             $deletionstage = coursecat::get(get_config('local_coursedeletion', 'deletion_staging_category_id'));
             $this->send_mail_to_teachers($records, self::MAIL_WILL_SOON_BE_DELETED);
             $this->make_courses_invisible($records);
@@ -302,6 +304,8 @@ class CourseDeletion {
         );
 
         if ($records = $DB->get_records_sql($sql, $params)) {
+            // The teacher and course information will be needed to send them a mail
+            $this->add_course_info($records);
             $deleted = $this->run_course_deletion($records);
             if (count($deleted)) {
                 $this->send_mail_to_teachers($deleted, self::MAIL_WAS_DELETED);
@@ -330,7 +334,6 @@ class CourseDeletion {
         $from = $this->email_from_user();
         foreach ($delrecords as $rec) {
             if (empty($rec->course_teachers)) {
-                //warn("No teachers found for course id $rec->courseid");
                 local_coursedeletion\event\workflow_notify_error::create(array(
                     // record the course id instead of the id of this record
                     'objectid' => $rec->courseid,
@@ -411,6 +414,18 @@ class CourseDeletion {
         return $this->course_teacher_role_ids;
     }
 
+    /**
+     * Modifies passed $delrecords, adding course_record and course_teachers.
+     *
+     * @param array $delrecords course deletion records
+     */
+    protected function add_course_info($delrecords) {
+        foreach ($delrecords as $record) {
+            $record->course_record = get_course($record->courseid);
+            $record->course_teachers = $this->get_course_teachers($record->courseid);
+        }
+    }
+
     protected function move_to_staging_area($delrecords, $targetcategoryid) {
         global $CFG, $DB;
         require_once($CFG->dirroot . '/course/lib.php');
@@ -434,9 +449,6 @@ class CourseDeletion {
         //$transaction = $DB->start_delegated_transaction();
         $deleted = array();
         foreach ($delrecords as $rec) {
-            // The teacher and course information will be needed to send them a mail
-            $rec->course_teachers = $this->get_course_teachers($rec->courseid);
-            $rec->course_record = get_course(($rec->courseid));
             if (delete_course($rec->courseid, false)) {
                 $deleted[]= $rec;
             } else {
