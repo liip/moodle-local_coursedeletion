@@ -628,7 +628,7 @@ class CourseDeletion {
             $date->setTimestamp($time);
         }
 
-        $date->modify('midnight');
+        $date->setTime(0,0,0);
 
         if (is_null($interval)) {
             return $date;
