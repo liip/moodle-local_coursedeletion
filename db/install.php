@@ -21,7 +21,7 @@ function local_courseduplication_add_course_deletion_records() {
 
     $deletion_staging_category_id = get_config('local_coursedeletion', 'deletion_staging_category_id');
 
-    if($DB->get_record_exists('course_category', array('id' => $deletion_staging_category_id))) {
+    if($DB->record_exists('course_category', array('id' => $deletion_staging_category_id))) {
 
       $staging_cat_context = context_coursecat::instance($deletion_staging_category_id);
 
