@@ -35,7 +35,7 @@ $string['mail_will_be_staged_subject'] = 'Ihr Moodle-Kursraum {$a->coursefullnam
 $string['mail_will_be_staged_body'] = 'Liebe Moodle-Kursraum-Verantwortliche /
 Lieber Moodle-Kursraum-Verantwortlicher {$a->userfullname}
 
-Der Moodle-Kursraum {$a->coursefullname} ( {$a->courseurl} ) hat das Verfalldatum bald erreicht. Falls nichts unternommen wird, wird er am {$a->stagedate} in den Papierkorb verschoben und am {$a->deletiondate} endgültig gelöscht.
+Der Moodle-Kursraum {$a->coursefullname} ( {$a->courseurl} ) hat das Verfalldatum erreicht. Falls nichts unternommen wird, wird er am {$a->stagedate} in den Papierkorb verschoben und am {$a->deletiondate} endgültig gelöscht.
 
 Falls dies nicht gewünscht ist, kann das Verfalldatum hier verlängert werden: {$a->settingsurl} . Bei Fragen wenden Sie sich bitte an eine zuständige Ansprechperson Ihrer Hochschule ( {$a->contacturl} )
 
