@@ -1,6 +1,7 @@
 <?php
 $string['pluginname'] = 'Automatisiertes Kurslöschen';
 $string['coursedeletion'] = 'Automatisiertes Kurslöschen';
+$string['settings'] = $string['pluginname'];
 
 $string['coursedeletion:course_autodelete_settings'] = 'Automatisiertes Kurslöschen: Einstellungen für Kurs anpassen';
 $string['workflow_task_name'] = 'Tägliche Workflow';
@@ -30,6 +31,11 @@ $string['already_sent'] = 'Schon versandt';
 $string['mail_sent'] = 'Eine E-mail mit den aktualisierten Daten wurde an die Kursraum-Verantwortlichen geschickt';
 
 // notification mails
+$string['mailfrom_address'] = 'Mail Von: Adresse';
+$string['mailfrom_address_desc'] = 'Email-Adresse zu verwenden für geschickte E-mails.  Wenn leer, die Adresse der Hauptadmin wird werwendet';
+$string['mailfrom_text'] = 'Mail Von: Name';
+$string['mailfrom_text_desc'] = 'Name zu verwenden für geschickte E-mails.  Wenn leer, "No-reply" wird verwendet.';
+
 $string['mail_will_be_staged_subject'] = 'Ihr Moodle-Kursraum {$a->coursefullname} wird demnächst gelöscht';
 $string['mail_will_be_staged_body'] = 'Liebe Moodle-Kursraum-Verantwortliche /
 Lieber Moodle-Kursraum-Verantwortlicher {$a->userfullname}

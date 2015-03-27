@@ -380,7 +380,33 @@ class CourseDeletion {
 
     protected function email_from_user() {
         if (is_null($this->email_from_user)) {
-            $this->email_from_user = get_admin();
+            $conf = get_config('local_coursedeletion');
+            if ($conf) {
+                if (!$conf->mailfrom_address) {
+                    $this->email_from_user = get_admin();
+                } else {
+                    $mailfrom = new stdClass;
+
+                    # Avoid debugging message:
+                    $all_user_name_fields = get_all_user_name_fields();
+                    foreach ($all_user_name_fields as $fieldname) {
+                        $mailfrom->$fieldname = '';
+                    }
+
+
+                    $mailfrom->maildisplay = 1;
+                    $mailfrom->lastname = '';
+                    $mailfrom->email = $conf->mailfrom_address;
+                    if ($conf->mailfrom_text) {
+                        $mailfrom->firstname = $conf->mailfrom_text;
+                    } else {
+                        $mailfrom->firstname = "No-Reply";
+                    }
+                    $this->email_from_user = $mailfrom;
+                }
+            } else {
+                $this->email_from_user = get_admin();
+            }
         }
         return $this->email_from_user;
     }

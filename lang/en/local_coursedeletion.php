@@ -1,6 +1,8 @@
 <?php
 $string['pluginname'] = 'Auto Course Deletion';
 $string['coursedeletion'] = 'Auto Course Deletion';
+$string['settings'] = $string['pluginname'];
+
 
 $string['coursedeletion:course_autodelete_settings'] = 'Configure auto-deletion settings for a course';
 $string['workflow_task_name'] = 'Daily workflow';
@@ -31,6 +33,11 @@ $string['mail_sent'] = 'A mail has been sent to teachers with the new dates';
 
 
 // notification mails
+$string['mailfrom_address'] = 'Mail from address';
+$string['mailfrom_address_desc'] = 'Email address to use for the from: field.  If blank, the primary admin\'s address will be used';
+$string['mailfrom_text'] = 'Mail from name';
+$string['mailfrom_text_desc'] = 'Name to show for the from: field for notification emails.  If blank, "No-reply" will be used';
+
 $string['mail_will_be_staged_subject'] = 'Ihr Moodle-Kursraum {$a->coursefullname} wird demnächst gelöscht';
 $string['mail_will_be_staged_body'] = 'Liebe Moodle-Kursraum-Verantwortliche /
 Lieber Moodle-Kursraum-Verantwortlicher {$a->userfullname}
