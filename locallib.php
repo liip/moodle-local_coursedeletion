@@ -422,8 +422,9 @@ class CourseDeletion {
     protected function get_course_teachers($courseid) {
         $context = context_course::instance($courseid);
         $teachers = array();
+        $include_higher_contexts = true;
         foreach ($this->course_teacher_role_ids() as $roleid) {
-            $teachers = array_merge($teachers, get_role_users($roleid, $context));
+            $teachers = array_merge($teachers, get_role_users($roleid, $context, $include_higher_contexts));
         }
         return $teachers;
     }
