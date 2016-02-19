@@ -37,7 +37,7 @@ if (!has_capability('local/coursedeletion:course_autodelete_settings', $courseco
     print_error(
         'nopermissions',
         'error',
-        new moodle_url('/course/view.php', array('id' => $course->id))        
+        new moodle_url('/course/view.php', array('id' => $course->id))
     );
 }
 
@@ -75,28 +75,22 @@ if ($form = $mform->get_data()){
     $coursedeletion->enddate = $form->enddate;
     $coursedeletion->status = $form->status;
     $DB->update_record('local_coursedeletion', $coursedeletion);
-
-    switch ($coursedeletion->status) {
-        case CourseDeletion::STATUS_NOT_SCHEDULED:
-            if (isset($info['changes']['status'])) {
-                $flash[] = get_string('deletion_not_scheduled', 'local_coursedeletion');
-            }
-            break;
-        case CourseDeletion::STATUS_SCHEDULED:
-        case CourseDeletion::STATUS_SCHEDULED_NOTIFIED:
-            $a = new stdClass;
-            if ($coursedeletion->status == CourseDeletion::STATUS_SCHEDULED) {
-                $a->maildate = CourseDeletion::first_notification_date($coursedeletion->enddate)->format('d.m.Y');
-            } else {
-                $a->maildate = get_string('already_sent', 'local_coursedeletion');
-            }
-            $a->stagedate = CourseDeletion::date_course_will_be_staged_for_deletion($coursedeletion->enddate)->format('d.m.Y');
-            $a->deletiondate = CourseDeletion::date_course_will_be_deleted($coursedeletion->enddate)->format('d.m.Y');
-            $flash[] = get_string('scheduled_upcoming_events', 'local_coursedeletion', $a);
-            break;
-    }
 }
 
+// SUP-6847: always show the scheduled_upcoming_events:
+if (in_array($coursedeletion->status, array(CourseDeletion::STATUS_SCHEDULED, CourseDeletion::STATUS_SCHEDULED_NOTIFIED))) {
+    $a = new stdClass;
+    if ($coursedeletion->status == CourseDeletion::STATUS_SCHEDULED) {
+        $a->maildate = CourseDeletion::first_notification_date($coursedeletion->enddate)->format('d.m.Y');
+    } else {
+        $a->maildate = get_string('already_sent', 'local_coursedeletion');
+    }
+    $a->stagedate = CourseDeletion::date_course_will_be_staged_for_deletion($coursedeletion->enddate)->format('d.m.Y');
+    $a->deletiondate = CourseDeletion::date_course_will_be_deleted($coursedeletion->enddate)->format('d.m.Y');
+    $flash[] = get_string('scheduled_upcoming_events', 'local_coursedeletion', $a);
+} else if ($coursedeletion->status == CourseDeletion::STATUS_NOT_SCHEDULED) {
+    $flash[] = get_string('deletion_not_scheduled', 'local_coursedeletion');
+}
 
 foreach ($flash as $message) {
     echo $OUTPUT->container($message, 'alert alert-info');

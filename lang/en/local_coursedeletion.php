@@ -26,6 +26,7 @@ $string['settings_update'] = 'Change settings';
 $string['enddatemustbeinfuture'] = 'The end date must be today or later';
 
 // messages:
+$string['deletion_not_scheduled'] = 'The course is currently not scheduled for deletion';
 $string['minimum_date_was_forced'] = 'The end date was adjusted to the minimum possible date.';
 $string['scheduled_upcoming_events'] = 'Expiry reminder mail: {$a->maildate}<br/>Course will be moved to trash: {$a->stagedate}<br/>Course will be deleted: {$a->deletiondate}';
 $string['already_sent'] = 'Already sent';

@@ -25,6 +25,7 @@ $string['settings_update'] = 'Einstellungen ändern';
 $string['enddatemustbeinfuture'] = 'Verfalldatum muss heute oder später sein.';
 
 // messages:
+$string['deletion_not_scheduled'] = 'Automatisiertes Löschen des Kurses ist zur Zeit nicht festgelegt';
 $string['minimum_date_was_forced'] = 'Das Enddatum wurde automatisch auf das nächst mögliche Datum gesetzt.';
 $string['scheduled_upcoming_events'] = 'Ablauf-Erinnerungsmail: {$a->maildate}<br/>Kurs wird in den Papierkorb verschoben: {$a->stagedate}<br/>Kurs wird gelöscht: {$a->deletiondate}';
 $string['already_sent'] = 'Schon versandt';
