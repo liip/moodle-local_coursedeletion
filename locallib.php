@@ -13,15 +13,15 @@
  *                            (mail_will_be_staged)    (mail_will_be_deleted_soon)
  *
  * In case the cron job does not run for a few days or weeks for some reason, the course end date will
- * be reset so that teachers will have time to react.
+ * be reset so that teachers / managers will have time to react.
  * Example: cron didn't run for some weeks:
  *   * end_date was 2014-07-01
  *   * cron starts running again on 2014-07-12
- *   * end_date is reset to 2014-07-12 + 3 weeks, and teachers are sent mail about upcoming move to deletion-staging.
+ *   * end_date is reset to 2014-07-12 + 3 weeks, and teachers / managers  are sent mail about upcoming move to deletion-staging.
  * Example 2: cron didn't run for two weeks:
  *   * end_date was 2014-07-24
  *   * cron starts running again on 2014-07-30
- *   * end_date is reset to 2014-07-30, course is moved to deletion-staging, teachers notified.
+ *   * end_date is reset to 2014-07-30, course is moved to deletion-staging, teachers / managers notified.
  *
  */
 class CourseDeletion {
@@ -48,7 +48,17 @@ class CourseDeletion {
     /**
      * @var array of integers: ids of role records (editingteacher, ...)
      */
-    protected $course_teacher_role_ids;
+    protected $notification_user_role_ids;
+
+    /**
+     * @var array of strings: short names of roles that should receive notifications.
+     */
+    protected $notification_user_role_names = array(
+        'editingteacher',
+        'teacher',
+        'keyholder',
+        'manager',
+    );
 
     /**
      * @var stdClass db user record that will be used as the sender of the notification mails.
@@ -189,13 +199,13 @@ class CourseDeletion {
     }
 
     /**
-     * Three weeks before Verfallsdatum, send mail to all teachers in the course, telling them that their course
-     * will be moved to the trash soon.
+     * Three weeks before Verfallsdatum, send mail to all notification users in the course, telling them that
+     * the course will be moved to the trash soon.
      */
-    public function prenotify_teachers_of_staging() {
+    public function prenotify_users_of_staging() {
         global $DB;
 
-        $this->out('prenotify_teachers_of_staging start');
+        $this->out('prenotify_users_of_staging start');
 
         $staging_time = self::midnight_timestamp(self::interval_until_staging());
 
@@ -210,7 +220,7 @@ class CourseDeletion {
                 $staging_time
             );
             $this->add_course_info($records);
-            $this->send_mail_to_teachers($records, self::MAIL_WILL_BE_STAGED_FOR_DELETION);
+            $this->send_mail_to_notification_users($records, self::MAIL_WILL_BE_STAGED_FOR_DELETION);
 
             list($in, $params) = $DB->get_in_or_equal(array_keys($records), SQL_PARAMS_NAMED);
             $params['status'] = self::STATUS_SCHEDULED_NOTIFIED;
@@ -223,16 +233,16 @@ class CourseDeletion {
             $DB->execute($sql, $params);
 
             foreach ($records as $rec) {
-                self::log($rec, 'workflow_notify', 'teachers_prenotified');
-                $this->out("Course $rec->courseid teachers notified of course end");
+                self::log($rec, 'workflow_notify', 'users_prenotified');
+                $this->out("Course $rec->courseid notification users informed of course end");
             }
         }
-        $this->out('prenotify_teachers_of_staging end');
+        $this->out('prenotify_users_of_staging end');
     }
 
     /**
      * On the Verfallsdatum, move course to course deletion staging category (i.e. trashcan).
-     * Also, notify teachers that this has been done.
+     * Also, inform the notification users that this has been done.
      */
     public function stage_courses_for_deletion($courseid = null) {
         global $CFG, $DB;
@@ -255,12 +265,12 @@ class CourseDeletion {
             $records = $this->reset_enddates($records, $expected_end_date, $expected_end_date);
             $this->add_course_info($records);
             $deletionstage = coursecat::get(get_config('local_coursedeletion', 'deletion_staging_category_id'));
-            $this->send_mail_to_teachers($records, self::MAIL_WILL_SOON_BE_DELETED);
+            $this->send_mail_to_notification_users($records, self::MAIL_WILL_SOON_BE_DELETED);
             $this->make_courses_invisible($records);
             $this->move_to_staging_area($records, $deletionstage->id);
             foreach ($records as $rec) {
                 self::log($rec, 'settings_update', 'moved to deletion staging category');
-                self::log($rec, 'workflow_notify', 'teachers_notified_of_move_to_trash');
+                self::log($rec, 'workflow_notify', 'users_notified_of_move_to_trash');
                 $this->out("Course $rec->courseid moved to deletion staging category");
             }
 
@@ -304,11 +314,11 @@ class CourseDeletion {
         );
 
         if ($records = $DB->get_records_sql($sql, $params)) {
-            // The teacher and course information will be needed to send them a mail
+            // The user and course information will be needed to send them a mail
             $this->add_course_info($records);
             $deleted = $this->run_course_deletion($records);
             if (count($deleted)) {
-                $this->send_mail_to_teachers($deleted, self::MAIL_WAS_DELETED);
+                $this->send_mail_to_notification_users($deleted, self::MAIL_WAS_DELETED);
                 $courseids = array();
                 foreach ($deleted as $rec) {
                     $courseids[] = $rec->courseid;
@@ -329,17 +339,17 @@ class CourseDeletion {
         $this->out('delete_courses end');
     }
 
-    public function send_mail_to_teachers($delrecords, $mailtype) {
+    public function send_mail_to_notification_users($delrecords, $mailtype) {
 
         $from = $this->email_from_user();
         foreach ($delrecords as $rec) {
-            if (empty($rec->course_teachers)) {
+            if (empty($rec->notification_users)) {
                 local_coursedeletion\event\workflow_notify_error::create(array(
                     // record the course id instead of the id of this record
                     'objectid' => $rec->courseid,
                     'other' => array(
                         'courseid' => $rec->courseid,
-                        'detail' => "No teachers found for course $rec->courseid",
+                        'detail' => "No notification users found for course $rec->courseid",
                     )
                 ))->trigger();
                 continue;
@@ -358,7 +368,7 @@ class CourseDeletion {
                 $a->deletiondate = self::date_course_will_be_deleted($rec->enddate)->format('d.m.Y');
             }
 
-            foreach ($rec->course_teachers as $user) {
+            foreach ($rec->notification_users as $user) {
                 $a->userfullname = fullname($user);
                 $subject = get_string($mailtype . '_subject', 'local_coursedeletion', $a);
                 $body = get_string($mailtype . '_body', 'local_coursedeletion', $a);
@@ -419,37 +429,39 @@ class CourseDeletion {
     }
 
 
-    protected function get_course_teachers($courseid) {
+    protected function get_notification_users($courseid) {
         $context = context_course::instance($courseid);
-        $teachers = array();
+        $users = array();
         $include_higher_contexts = true;
-        foreach ($this->course_teacher_role_ids() as $roleid) {
-            $teachers = array_merge($teachers, get_role_users($roleid, $context, $include_higher_contexts));
+        foreach ($this->notification_user_role_ids() as $roleid) {
+            $users = array_merge($users, get_role_users($roleid, $context, $include_higher_contexts));
         }
-        return $teachers;
+        return $users;
     }
 
-    protected function course_teacher_role_ids() {
+    protected function notification_user_role_ids() {
         global $DB;
 
-        if (is_null($this->course_teacher_role_ids)) {
-            if ($role = $DB->get_record('role', array('shortname' => 'editingteacher'))) {
-                $this->course_teacher_role_ids = array($role->id);
+        if (is_null($this->notification_user_role_ids)) {
+            $this->notification_user_role_ids = array();
+            foreach ($this->notification_user_role_names as $role_name)
+            if ($role = $DB->get_record('role', array('shortname' => $role_name))) {
+                $this->notification_user_role_ids []= array($role->id);
             }
         }
 
-        return $this->course_teacher_role_ids;
+        return $this->notification_user_role_ids;
     }
 
     /**
-     * Modifies passed $delrecords, adding course_record and course_teachers.
+     * Modifies passed $delrecords, adding course_record and notification_users.
      *
      * @param array $delrecords course deletion records
      */
     protected function add_course_info($delrecords) {
         foreach ($delrecords as $record) {
             $record->course_record = get_course($record->courseid);
-            $record->course_teachers = $this->get_course_teachers($record->courseid);
+            $record->notification_users = $this->get_notification_users($record->courseid);
         }
     }
 

@@ -28,7 +28,7 @@ class workflow extends \core\task\scheduled_task {
         $cd = new CourseDeletion(null, $verbose);
         $cd->remove_records_for_missing_courses();
         $cd->reset_status_for_unstaged_courses();
-        $cd->prenotify_teachers_of_staging();
+        $cd->prenotify_users_of_staging();
         $cd->stage_courses_for_deletion();
         $cd->delete_courses();
     }

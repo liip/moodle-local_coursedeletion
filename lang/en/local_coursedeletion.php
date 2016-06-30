@@ -11,7 +11,7 @@ $string['workflow_task_name'] = 'Daily workflow';
 $string['coursedeletionsettings'] = 'Course Deletion';
 $string['coursedeletionsettingsheader'] = 'Course Deletion settings';
 $string['enddate'] = 'End date';
-$string['enddate_help'] = 'Three weeks before this date, a reminder will be sent to the teachers. On the end date, the course will be sent to the trash and made invisible for students. Three months after this date, the course will be permanently deleted.';
+$string['enddate_help'] = 'Three weeks before this date, a reminder will be sent to the teachers / managers / etc.. On the end date, the course will be sent to the trash and made invisible for students. Three months after this date, the course will be permanently deleted.';
 $string['scheduledeletion'] = 'Schedule deletion';
 $string['scheduledeletion_help'] = 'This allows starting or stopping the course deletion process.';
 
@@ -30,7 +30,7 @@ $string['deletion_not_scheduled'] = 'The course is currently not scheduled for d
 $string['minimum_date_was_forced'] = 'The end date was adjusted to the minimum possible date.';
 $string['scheduled_upcoming_events'] = 'Expiry reminder mail: {$a->maildate}<br/>Course will be moved to trash: {$a->stagedate}<br/>Course will be deleted: {$a->deletiondate}';
 $string['already_sent'] = 'Already sent';
-$string['mail_sent'] = 'A mail has been sent to teachers with the new dates';
+$string['mail_sent'] = 'A mail has been sent to the teachers / managers with the new dates';
 
 
 // notification mails

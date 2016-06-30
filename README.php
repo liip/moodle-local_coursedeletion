@@ -1,6 +1,6 @@
 <?php
 /*
-This plugin allows teachers to schedule deletion of their courses.
+This plugin allows teachers / managers to schedule deletion of their courses.
 
 It was written for FHNW and has FHNW-specific content (e.g. the mails).
 

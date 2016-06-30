@@ -10,7 +10,7 @@ $string['workflow_task_name'] = 'Tägliche Workflow';
 $string['coursedeletionsettings'] = 'Kurs löschen';
 $string['coursedeletionsettingsheader'] = 'Kurs löschen - Einstellungen';
 $string['enddate'] = 'Verfalldatum';
-$string['enddate_help'] = 'Drei Wochen vor diesem Datum wird eine Erinnerung an die Teachers geschickt. Am Verfalldatum wird der Kurs in den Papierkorb verschoben und für Studierende unsichtbar gemacht. Drei Monate nach diesem Datum wird der Kurs unwiderruflich gelöscht.';
+$string['enddate_help'] = 'Drei Wochen vor diesem Datum wird eine Erinnerung an die Kursraum-Verantwortlichen geschickt. Am Verfalldatum wird der Kurs in den Papierkorb verschoben und für Studierende unsichtbar gemacht. Drei Monate nach diesem Datum wird der Kurs unwiderruflich gelöscht.';
 $string['scheduledeletion'] = 'Kurs nach Verfalldatum löschen';
 $string['scheduledeletion_help'] = 'Hier kann der Löschprozess gestoppt oder gestartet werden.';
 

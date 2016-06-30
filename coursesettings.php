@@ -67,7 +67,7 @@ if ($form = $mform->get_data()){
         $mform->force_end_date($info['minimum_date_forced']);
     }
     if (!is_null($info['trigger_mail'])) {
-        $cd->send_mail_to_teachers(array($coursedeletion), $info['trigger_mail']);
+        $cd->send_mail_to_notification_users(array($coursedeletion), $info['trigger_mail']);
         $flash[]= get_string('mail_sent', 'local_coursedeletion');
     }
 
