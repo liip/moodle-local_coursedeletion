@@ -54,7 +54,6 @@ class CourseDeletion {
      * @var array of strings: short names of roles that should receive notifications.
      */
     protected $notification_user_role_names = array(
-        'editingteacher',
         'teacher',
         'keyholder',
         'manager',
@@ -432,11 +431,27 @@ class CourseDeletion {
     protected function get_notification_users($courseid) {
         $context = context_course::instance($courseid);
         $users = array();
-        $include_higher_contexts = true;
-        foreach ($this->notification_user_role_ids() as $roleid) {
-            $users = array_merge($users, get_role_users($roleid, $context, $include_higher_contexts));
+        $include_higher_contexts_for_teachers = true;
+        $include_higher_contexts_for_other_users = false;
+        foreach ($this->course_teacher_role_ids() as $teacher_role_id) {
+            $users = array_merge($users, get_role_users($teacher_role_id, $context, $include_higher_contexts_for_teachers));
+        }
+        foreach ($this->notification_user_role_ids() as $user_role_id) {
+            $users = array_merge($users, get_role_users($user_role_id, $context, $include_higher_contexts_for_other_users));
         }
         return $users;
+    }
+
+    protected function course_teacher_role_ids() {
+        global $DB;
+
+        if (is_null($this->course_teacher_role_ids)) {
+            if ($role = $DB->get_record('role', array('shortname' => 'editingteacher'))) {
+                $this->course_teacher_role_ids = array($role->id);
+            }
+        }
+
+        return $this->course_teacher_role_ids;
     }
 
     protected function notification_user_role_ids() {
