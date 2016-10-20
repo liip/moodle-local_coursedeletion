@@ -383,6 +383,12 @@ class CourseDeletion {
                         )
                     ))->trigger();
                 }
+                else {
+                  if ($mailtype === self::MAIL_WILL_BE_STAGED_FOR_DELETION || $mailtype === self::MAIL_WILL_SOON_BE_DELETED) {
+                    // SUP-7120 write one log entry for each mail warning sent
+                    self::log($rec, 'workflow_notify', 'user ' . $user->email . ' notified with ' . $mailtype);
+                  }
+                }
             }
         }
     }
