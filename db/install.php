@@ -18,6 +18,7 @@
  * @package local/coursedeletion
  * @copyright 2014-2018 Liip AG <https://www.liip.ch/>
  * @author Brian King <brian.king@liip.ch>
+ * @author Didier Raboud <didier.raboud@liip.ch>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,24 +30,22 @@ defined('MOODLE_INTERNAL') || die();
 function xmldb_local_coursedeletion_install() {
     global $DB;
 
-    // Historically, this module was made for an instance which had a category 605 as staging category id.
-    $deletionstagingcategoryid = 605;
-    if ($DB->record_exists('course_categories', array('id' => $deletionstagingcategoryid))) {
-        // Use Miscellaneous for this instead.
-        $deletionstagingcategoryid = $DB->get_field_sql('SELECT MIN(id) FROM {course_categories}');
-    }
+    // Use Miscellaneous as initial deletion staging category.
+    $deletionstagingcategoryid = $DB->get_field_sql('SELECT MIN(id) FROM {course_categories}');
     set_config('deletion_staging_category_id', $deletionstagingcategoryid, 'local_coursedeletion');
 
     set_config('interval_enddate_default', 'P13M', 'local_coursedeletion');
     set_config('interval_notification_before_enddate', 'P3W', 'local_coursedeletion');
     set_config('interval_staged_to_deletion', 'P3M', 'local_coursedeletion');
-    set_config('school_contact_url', 'http://web.fhnw.ch/e-learning', 'local_coursedeletion');
+
+    set_config('school_contact_url', 'https://example.com/e-learning', 'local_coursedeletion');
+
     local_coursedeletion_add_course_deletion_records();
 }
 
 function local_coursedeletion_add_course_deletion_records() {
-    global $DB;
-    require_once(__DIR__ . '/../locallib.php');
+    global $CFG, $DB;
+    require_once($CFG->dirroot . '/local/coursedeletion/locallib.php');
 
     $deletionstagingcategoryid = get_config('local_coursedeletion', 'deletion_staging_category_id');
 

@@ -18,6 +18,7 @@
  * @package local/coursedeletion
  * @copyright 2014-2018 Liip AG <https://www.liip.ch/>
  * @author Brian King <brian.king@liip.ch>
+ * @author Didier Raboud <didier.raboud@liip.ch>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
