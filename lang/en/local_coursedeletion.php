@@ -56,6 +56,17 @@ $string['scheduled_upcoming_events'] = 'Expiry reminder mail: {$a->maildate}<br/
 $string['already_sent'] = 'Already sent';
 $string['mail_sent'] = 'A mail has been sent to the teachers / managers with the new dates';
 
+// Configurations.
+$string['deletion_staging_category'] = 'Deletion staging course category';
+$string['deletion_staging_category_desc'] = 'This is the target category where courses are moved to before deletion';
+$string['interval_enddate_default'] = 'Default end date interval';
+$string['interval_enddate_default_desc'] = "When a course is created or reset, it's enddate will be set to today + this value. The format is PHP's DateInterval.";
+$string['interval_notification_before_enddate'] = 'Default notification before end date interval';
+$string['interval_notification_before_enddate_desc'] = "The length of time between when the first notification mail is sent, and the course end date. The format is PHP's DateInterval.";
+$string['interval_staged_to_deletion'] = 'Default staged to deletion interval';
+$string['interval_staged_to_deletion_desc'] = "The time interval from when the course was staged for deletion until the course is deleted.. The format is PHP's DateInterval.";
+$string['school_contact_url'] = 'School contact url';
+$string['school_contact_url_desc'] = 'School contact url, used in the emails';
 
 // Notification mails.
 $string['mailfrom_address'] = 'Mail from address';

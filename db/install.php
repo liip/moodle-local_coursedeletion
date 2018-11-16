@@ -28,7 +28,15 @@ defined('MOODLE_INTERNAL') || die();
  */
 function xmldb_local_coursedeletion_install() {
     global $DB;
-    set_config('deletion_staging_category_id', 605, 'local_coursedeletion');
+
+    // Historically, this module was made for an instance which had a category 605 as staging category id.
+    $deletionstagingcategoryid = 605;
+    if ($DB->record_exists('course_categories', array('id' => $deletionstagingcategoryid))) {
+        // Use Miscellaneous for this instead.
+        $deletionstagingcategoryid = $DB->get_field_sql('SELECT MIN(id) FROM {course_categories}');
+    }
+    set_config('deletion_staging_category_id', $deletionstagingcategoryid, 'local_coursedeletion');
+
     set_config('interval_enddate_default', 'P13M', 'local_coursedeletion');
     set_config('interval_notification_before_enddate', 'P3W', 'local_coursedeletion');
     set_config('interval_staged_to_deletion', 'P3M', 'local_coursedeletion');

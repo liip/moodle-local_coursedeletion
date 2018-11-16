@@ -25,6 +25,39 @@ defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
     $settings = new admin_settingpage('local_coursedeletion', new lang_string('settings', 'local_coursedeletion'));
+
+    $settings->add(new admin_setting_configselect('local_coursedeletion/deletion_staging_category_id',
+        get_string('deletion_staging_category', 'local_coursedeletion'),
+        get_string('deletion_staging_category_desc', 'local_coursedeletion'),
+        636,
+        make_categories_options()
+    ));
+    $settings->add(new admin_setting_configtext('local_coursedeletion/interval_enddate_default',
+        get_string('interval_enddate_default', 'local_coursedeletion'),
+        get_string('interval_enddate_default_desc', 'local_coursedeletion'),
+        'P13M',
+        PARAM_TEXT
+    ));
+    $settings->add(new admin_setting_configtext('local_coursedeletion/interval_notification_before_enddate',
+        get_string('interval_notification_before_enddate', 'local_coursedeletion'),
+        get_string('interval_notification_before_enddate_desc', 'local_coursedeletion'),
+        'P3W',
+        PARAM_TEXT
+    ));
+    $settings->add(new admin_setting_configtext('local_coursedeletion/interval_staged_to_deletion',
+        get_string('interval_staged_to_deletion', 'local_coursedeletion'),
+        get_string('interval_staged_to_deletion_desc', 'local_coursedeletion'),
+        'P3M',
+        PARAM_TEXT
+    ));
+
+    $settings->add(new admin_setting_configtext('local_coursedeletion/school_contact_url',
+        get_string('school_contact_url', 'local_coursedeletion'),
+        get_string('school_contact_url_desc', 'local_coursedeletion'),
+        'http://web.fhnw.ch/e-learning',
+        PARAM_URL
+    ));
+
     // From address to use when sending emails.
     $settings->add(new admin_setting_configtext('local_coursedeletion/mailfrom_address',
         get_string('mailfrom_address', 'local_coursedeletion'),
