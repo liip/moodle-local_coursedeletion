@@ -47,8 +47,8 @@ function local_coursedeletion_extend_navigation_course  (navigation_node $parent
         $label,
         $url,
         navigation_node::NODETYPE_LEAF,
-        'duplicatecourse',
-        'duplicatecourse',
+        'deletecourse',
+        'deletecourse',
         new pix_icon('i/calendar', $label)
     );
     if ($PAGE->url->compare($url, URL_MATCH_BASE)) {

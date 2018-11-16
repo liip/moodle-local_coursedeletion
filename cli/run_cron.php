@@ -23,7 +23,7 @@
 
 define('CLI_SCRIPT', true);
 
-require('/../../../config.php');
+require('../../../config.php');
 require_once($CFG->libdir . '/clilib.php');
 
 /**

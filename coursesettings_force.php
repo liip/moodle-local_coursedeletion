@@ -21,7 +21,7 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once('/../../config.php');
+require_once('../../config.php');
 require_once($CFG->libdir . '/formslib.php');
 require_once($CFG->dirroot . '/local/coursedeletion/coursesettings_force_form.php');
 require_once($CFG->dirroot . '/local/coursedeletion/locallib.php');
