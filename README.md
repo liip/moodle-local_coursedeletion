@@ -1,5 +1,5 @@
-<?php
-/*
+# Moodle course deletion scheduling
+
 This plugin allows teachers / managers to schedule deletion of their courses.
 
 It was written for FHNW and has FHNW-specific content (e.g. the mails).
@@ -44,5 +44,3 @@ It will need to be adapted to work on Moodle >= 2.7.
 
       # To do it:
       php cli/run_cron.php --help
-
-*/
