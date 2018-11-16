@@ -21,10 +21,10 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ . '/../../config.php');
-require_once("$CFG->libdir/formslib.php");
-require_once(__DIR__ . '/coursesettings_form.php');
-require_once(__DIR__ . '/locallib.php');
+require_once('/../../config.php');
+require_once($CFG->libdir . '/formslib.php');
+require_once($CFG->dirroot . '/local/coursedeletion/coursesettings_force_form.php');
+require_once($CFG->dirroot . '/local/coursedeletion/locallib.php');
 
 $id = required_param('id', PARAM_INT);
 
@@ -60,13 +60,13 @@ $PAGE->set_heading($course->fullname);
 
 // If a course doesn't have coursedeletion enabled, and it does get enabled,
 // the end date by default should be set to 13 months later (depending on config).
-$form_enddate = $coursedeletion->enddate;
+$formenddate = $coursedeletion->enddate;
 if ($coursedeletion->status == CourseDeletion::STATUS_NOT_SCHEDULED) {
-    $form_enddate = CourseDeletion::default_course_end_date();
+    $formenddate = CourseDeletion::default_course_end_date();
 }
 $formparams = array(
     'coursedeletion' => $coursedeletion,
-    'enddate' => $form_enddate,
+    'enddate' => $formenddate,
 );
 $mform = new coursedeletion_coursesettings_form(null, $formparams);
 
@@ -74,14 +74,13 @@ if ($mform->is_cancelled()) {
     redirect(new moodle_url('/course/view.php', array('id' => $course->id)));
 }
 
-/* @var core_renderer $OUTPUT */
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('coursedeletionsettingsheader', 'local_coursedeletion'));
 
 $flash = array();
 $changed = array();
 
-if ($form = $mform->get_data()){
+if ($form = $mform->get_data()) {
     $cd = new CourseDeletion();
     $info = CourseDeletion::update_from_form($coursedeletion, $form, $cd);
     if (!is_null($info['minimum_date_forced'])) {
@@ -108,7 +107,7 @@ if ($form = $mform->get_data()){
     }
 }
 
-// SUP-6847: always show the scheduled_upcoming_events:
+// SUP-6847: always show the scheduled_upcoming_events.
 if (in_array($coursedeletion->status, array(CourseDeletion::STATUS_SCHEDULED, CourseDeletion::STATUS_SCHEDULED_NOTIFIED))) {
     $a = new stdClass;
     if ($coursedeletion->status == CourseDeletion::STATUS_SCHEDULED) {

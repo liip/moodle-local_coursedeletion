@@ -30,7 +30,7 @@ $string['settings'] = $string['pluginname'];
 $string['coursedeletion:course_autodelete_settings'] = 'Automatisiertes Kurslöschen: Einstellungen für Kurs anpassen';
 $string['workflow_task_name'] = 'Tägliche Workflow';
 
-// course settings:
+// Course settings.
 $string['coursedeletionsettings'] = 'Kurs löschen';
 $string['coursedeletionsettingsheader'] = 'Kurs löschen - Einstellungen';
 $string['enddate'] = 'Verfalldatum';
@@ -38,24 +38,24 @@ $string['enddate_help'] = 'Drei Wochen vor diesem Datum wird eine Erinnerung an 
 $string['scheduledeletion'] = 'Kurs nach Verfalldatum löschen';
 $string['scheduledeletion_help'] = 'Hier kann der Löschprozess gestoppt oder gestartet werden.';
 
-// events:
+// Events.
 $string['course_delete'] = 'Kurs löschen';
 $string['course_delete_error'] = 'Fehler beim Löschen der Kurs';
 $string['workflow_notify'] = 'Notification auslösen';
 $string['workflow_notify_error'] = 'Fehler beim Auslösen der Notification';
 $string['settings_update'] = 'Einstellungen ändern';
 
-// errors:
+// Errors.
 $string['enddatemustbeinfuture'] = 'Verfalldatum muss heute oder später sein.';
 
-// messages:
+// Messages.
 $string['deletion_not_scheduled'] = 'Automatisiertes Löschen des Kurses ist zur Zeit nicht festgelegt';
 $string['minimum_date_was_forced'] = 'Das Enddatum wurde automatisch auf das nächst mögliche Datum gesetzt.';
 $string['scheduled_upcoming_events'] = 'Ablauf-Erinnerungsmail: {$a->maildate}<br/>Kurs wird in den Papierkorb verschoben: {$a->stagedate}<br/>Kurs wird gelöscht: {$a->deletiondate}';
 $string['already_sent'] = 'Schon versandt';
 $string['mail_sent'] = 'Eine E-mail mit den aktualisierten Daten wurde an die Kursraum-Verantwortlichen geschickt';
 
-// notification mails
+// Notification mails.
 $string['mailfrom_address'] = 'Mail Von: Adresse';
 $string['mailfrom_address_desc'] = 'Email-Adresse zu verwenden für geschickte E-mails.  Wenn leer, die Adresse der Hauptadmin wird werwendet';
 $string['mailfrom_text'] = 'Mail Von: Name';

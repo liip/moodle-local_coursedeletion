@@ -31,7 +31,7 @@ $string['settings'] = $string['pluginname'];
 $string['coursedeletion:course_autodelete_settings'] = 'Configure auto-deletion settings for a course';
 $string['workflow_task_name'] = 'Daily workflow';
 
-// course settings:
+// Course settings.
 $string['coursedeletionsettings'] = 'Course Deletion';
 $string['coursedeletionsettingsheader'] = 'Course Deletion settings';
 $string['enddate'] = 'End date';
@@ -39,17 +39,17 @@ $string['enddate_help'] = 'Three weeks before this date, a reminder will be sent
 $string['scheduledeletion'] = 'Schedule deletion';
 $string['scheduledeletion_help'] = 'This allows starting or stopping the course deletion process.';
 
-// events:
+// Events.
 $string['course_delete'] = 'Delete course';
 $string['course_delete_error'] = 'Error deleting course';
 $string['workflow_notify'] = 'Send notification';
 $string['workflow_notify_error'] = 'Error sending notification';
 $string['settings_update'] = 'Change settings';
 
-// errors:
+// Errors.
 $string['enddatemustbeinfuture'] = 'The end date must be today or later';
 
-// messages:
+// Messages.
 $string['deletion_not_scheduled'] = 'The course is currently not scheduled for deletion';
 $string['minimum_date_was_forced'] = 'The end date was adjusted to the minimum possible date.';
 $string['scheduled_upcoming_events'] = 'Expiry reminder mail: {$a->maildate}<br/>Course will be moved to trash: {$a->stagedate}<br/>Course will be deleted: {$a->deletiondate}';
@@ -57,7 +57,7 @@ $string['already_sent'] = 'Already sent';
 $string['mail_sent'] = 'A mail has been sent to the teachers / managers with the new dates';
 
 
-// notification mails
+// Notification mails.
 $string['mailfrom_address'] = 'Mail from address';
 $string['mailfrom_address_desc'] = 'Email address to use for the from: field.  If blank, the primary admin\'s address will be used';
 $string['mailfrom_text'] = 'Mail from name';

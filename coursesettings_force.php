@@ -1,8 +1,30 @@
 <?php
-require_once(__DIR__ . '/../../config.php');
-require_once("$CFG->libdir/formslib.php");
-require_once(__DIR__ . '/coursesettings_force_form.php');
-require_once(__DIR__ . '/locallib.php');
+// This file is part of local/coursedeletion
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package local/coursedeletion
+ * @copyright 2014-2018 Liip AG <https://www.liip.ch/>
+ * @author Brian King <brian.king@liip.ch>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+require_once('/../../config.php');
+require_once($CFG->libdir . '/formslib.php');
+require_once($CFG->dirroot . '/local/coursedeletion/coursesettings_force_form.php');
+require_once($CFG->dirroot . '/local/coursedeletion/locallib.php');
 
 $id = required_param('id', PARAM_INT);
 
@@ -22,12 +44,12 @@ require_course_login($course);
 //
 // where the numbers are user ids of the users who shall be permitted access.
 
-$can_access = false;
+$canaccess = false;
 if (isset($CFG->local_coursedeletion_force_users)) {
     $userids = explode(',', clean_param($CFG->local_coursedeletion_force_users, PARAM_SEQUENCE));
-    $can_access = in_array($USER->id, $userids);
+    $canaccess = in_array($USER->id, $userids);
 }
-if (!$can_access) {
+if (!$canaccess) {
     send_file_not_found();
     exit;
 }
@@ -63,7 +85,6 @@ if ($mform->is_cancelled()) {
     redirect(new moodle_url('/course/view.php', array('id' => $course->id)));
 }
 
-/* @var core_renderer $OUTPUT */
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('coursedeletionsettingsheader', 'local_coursedeletion'));
 
@@ -71,13 +92,13 @@ echo $OUTPUT->container('Be careful!  Here you can directly manipulate the value
 
 $flash = array();
 
-if ($form = $mform->get_data()){
+if ($form = $mform->get_data()) {
     $coursedeletion->enddate = $form->enddate;
     $coursedeletion->status = $form->status;
     $DB->update_record('local_coursedeletion', $coursedeletion);
 }
 
-// SUP-6847: always show the scheduled_upcoming_events:
+// SUP-6847: always show the scheduled_upcoming_events.
 if (in_array($coursedeletion->status, array(CourseDeletion::STATUS_SCHEDULED, CourseDeletion::STATUS_SCHEDULED_NOTIFIED))) {
     $a = new stdClass;
     if ($coursedeletion->status == CourseDeletion::STATUS_SCHEDULED) {

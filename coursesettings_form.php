@@ -25,7 +25,7 @@ defined('MOODLE_INTERNAL') || die();
 
 class coursedeletion_coursesettings_form extends moodleform{
 
-    function definition() {
+    protected function definition() {
         $mform =& $this->_form;
         $coursedeletion = $this->_customdata['coursedeletion'];
 
@@ -53,7 +53,7 @@ class coursedeletion_coursesettings_form extends moodleform{
         $this->add_action_buttons();
     }
 
-    function force_end_date($timestamp) {
+    public function force_end_date($timestamp) {
         $this->_form->setConstant('deletionstagedate', $timestamp);
     }
 }

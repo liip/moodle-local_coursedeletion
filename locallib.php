@@ -59,24 +59,24 @@ class CourseDeletion {
     const MAIL_WAS_DELETED = 'mail_was_deleted';
 
     /**
-     * @var int $deletion_staging_category_id
+     * @var int $deletionstagingcategoryid
      */
-    protected $deletion_staging_category_id;
+    protected $deletionstagingcategoryid;
 
     /**
-     * @var coursecat $deletion_staging_category
+     * @var coursecat $deletionstagingcategory
      */
-    protected $deletion_staging_category;
+    protected $deletionstagingcategory;
 
     /**
      * @var array of integers: ids of role records (editingteacher, ...)
      */
-    protected $notification_user_role_ids;
+    protected $notificationuserroleids;
 
     /**
      * @var array of strings: short names of roles that should receive notifications.
      */
-    protected $notification_user_role_names = array(
+    protected $notificationuserrolenames = array(
         'teacher',
         'keyholder',
         'manager',
@@ -85,7 +85,7 @@ class CourseDeletion {
     /**
      * @var stdClass db user record that will be used as the sender of the notification mails.
      */
-    protected $email_from_user;
+    protected $emailfromuser;
 
     /**
      * @var string $contacturl URL used in mails to help people find who they should contact if they have questions.
@@ -97,11 +97,11 @@ class CourseDeletion {
      */
     protected $verbosity;
 
-    function __construct($deletion_staging_category_id = null, $verbosity = 1) {
-        if (is_null($deletion_staging_category_id)) {
-            $deletion_staging_category_id = get_config('local_coursedeletion', 'deletion_staging_category_id');
+    public function __construct($deletionstagingcategoryid = null, $verbosity = 1) {
+        if (is_null($deletionstagingcategoryid)) {
+            $deletionstagingcategoryid = get_config('local_coursedeletion', 'deletion_staging_category_id');
         }
-        $this->deletion_staging_category_id = $deletion_staging_category_id;
+        $this->deletion_staging_category_id = $deletionstagingcategoryid;
         $this->verbosity = $verbosity;
     }
 
@@ -159,7 +159,7 @@ class CourseDeletion {
             list($in, $params) = $DB->get_in_or_equal(array_keys($orphans));
             foreach ($orphans as $orphan) {
                 local_coursedeletion\event\course_delete::create(array(
-                    // record the course id instead of the id of this record
+                    // Record the course id instead of the id of this record.
                     'objectid' => $orphan->courseid,
                     'other' => array(
                         'courseid' => $orphan->courseid,
@@ -228,17 +228,17 @@ class CourseDeletion {
 
         $this->out('prenotify_users_of_staging start');
 
-        $staging_time = self::midnight_timestamp(self::interval_until_staging());
+        $stagingtime = self::midnight_timestamp(self::interval_until_staging());
 
         $sql = "SELECT * from {local_coursedeletion} lcd
              WHERE lcd.status = ?
                AND lcd.enddate <= ?";
 
-        if ($records = $DB->get_records_sql($sql, array(self::STATUS_SCHEDULED, $staging_time))) {
+        if ($records = $DB->get_records_sql($sql, array(self::STATUS_SCHEDULED, $stagingtime))) {
             $records = $this->reset_enddates(
                 $records,
-                $staging_time,
-                $staging_time
+                $stagingtime,
+                $stagingtime
             );
             $this->add_course_info($records);
             $this->send_mail_to_notification_users($records, self::MAIL_WILL_BE_STAGED_FOR_DELETION);
@@ -271,19 +271,19 @@ class CourseDeletion {
 
         $this->out('stage_courses_for_deletion start');
 
-        $expected_end_date = self::midnight_timestamp();
+        $expectedenddate = self::midnight_timestamp();
         $sql = "
             SELECT * from {local_coursedeletion} lcd
              WHERE lcd.status = ?
                AND lcd.enddate <= ?
         ";
-        $params = array(self::STATUS_SCHEDULED_NOTIFIED, $expected_end_date);
+        $params = array(self::STATUS_SCHEDULED_NOTIFIED, $expectedenddate);
         if ($courseid) {
             $sql .= " AND lcd.courseid = ?";
             $params[] = $courseid;
         }
         if ($records = $DB->get_records_sql($sql, $params)) {
-            $records = $this->reset_enddates($records, $expected_end_date, $expected_end_date);
+            $records = $this->reset_enddates($records, $expectedenddate, $expectedenddate);
             $this->add_course_info($records);
             $deletionstage = coursecat::get(get_config('local_coursedeletion', 'deletion_staging_category_id'));
             $this->send_mail_to_notification_users($records, self::MAIL_WILL_SOON_BE_DELETED);
@@ -295,7 +295,7 @@ class CourseDeletion {
                 $this->out("Course $rec->courseid moved to deletion staging category");
             }
 
-            // update the status of the records
+            // Update the status of the records.
             list($in, $params) = $DB->get_in_or_equal(array_keys($records), SQL_PARAMS_NAMED);
             $params['status'] = self::STATUS_STAGED_FOR_DELETION;
             $DB->execute("UPDATE {local_coursedeletion} set status = :status WHERE id $in", $params);
@@ -335,7 +335,7 @@ class CourseDeletion {
         );
 
         if ($records = $DB->get_records_sql($sql, $params)) {
-            // The user and course information will be needed to send them a mail
+            // The user and course information will be needed to send them a mail.
             $this->add_course_info($records);
             $deleted = $this->run_course_deletion($records);
             if (count($deleted)) {
@@ -345,7 +345,7 @@ class CourseDeletion {
                     $courseids[] = $rec->courseid;
                     // Improved logging interface in 2.7?  Not so sure ...
                     local_coursedeletion\event\course_delete::create(array(
-                        // record the course id instead of the id of this record
+                        // Record the course id instead of the id of this record.
                         'objectid' => $rec->courseid,
                         'other' => array(
                             'courseid' => $rec->courseid,
@@ -366,7 +366,7 @@ class CourseDeletion {
         foreach ($delrecords as $rec) {
             if (empty($rec->notification_users)) {
                 local_coursedeletion\event\workflow_notify_error::create(array(
-                    // record the course id instead of the id of this record
+                    // Record the course id instead of the id of this record.
                     'objectid' => $rec->courseid,
                     'other' => array(
                         'courseid' => $rec->courseid,
@@ -393,10 +393,10 @@ class CourseDeletion {
                 $a->userfullname = fullname($user);
                 $subject = get_string($mailtype . '_subject', 'local_coursedeletion', $a);
                 $body = get_string($mailtype . '_body', 'local_coursedeletion', $a);
-                $body_html = nl2br(get_string($mailtype . '_body_html', 'local_coursedeletion', $a));
-                if (!email_to_user($user, $from, $subject, $body, $body_html)) {
+                $bodyhtml = nl2br(get_string($mailtype . '_body_html', 'local_coursedeletion', $a));
+                if (!email_to_user($user, $from, $subject, $body, $bodyhtml)) {
                     local_coursedeletion\event\workflow_notify_error::create(array(
-                        // record the course id instead of the id of this record
+                        // Record the course id instead of the id of this record.
                         'objectid' => $rec->courseid,
                         'relateduserid' => $user->id,
                         'other' => array(
@@ -404,10 +404,9 @@ class CourseDeletion {
                             'detail' => "Unable to send mail to user id $user->id",
                         )
                     ))->trigger();
-                }
-                else {
+                } else {
                     if ($mailtype === self::MAIL_WILL_BE_STAGED_FOR_DELETION || $mailtype === self::MAIL_WILL_SOON_BE_DELETED) {
-                        // SUP-7120 write one log entry for each mail warning sent
+                        // SUP-7120 write one log entry for each mail warning sent.
                         self::log($rec, 'workflow_notify', 'user ' . $user->email . ' notified with ' . $mailtype);
                     }
                 }
@@ -424,9 +423,9 @@ class CourseDeletion {
                 } else {
                     $mailfrom = new stdClass;
 
-                    // Avoid debugging message:
-                    $all_user_name_fields = get_all_user_name_fields();
-                    foreach ($all_user_name_fields as $fieldname) {
+                    // Avoid debugging message.
+                    $allusernamefields = get_all_user_name_fields();
+                    foreach ($allusernamefields as $fieldname) {
                         $mailfrom->$fieldname = '';
                     }
 
@@ -458,13 +457,13 @@ class CourseDeletion {
     protected function get_notification_users($courseid) {
         $context = context_course::instance($courseid);
         $users = array();
-        $include_higher_contexts_for_teachers = true;
-        $include_higher_contexts_for_other_users = false;
-        foreach ($this->course_teacher_role_ids() as $teacher_role_id) {
-            $users = array_merge($users, get_role_users($teacher_role_id, $context, $include_higher_contexts_for_teachers));
+        $includehighercontextsforteachers = true;
+        $includehighercontextsforotherusers = false;
+        foreach ($this->course_teacher_role_ids() as $teacherroleid) {
+            $users = array_merge($users, get_role_users($teacherroleid, $context, $includehighercontextsforteachers));
         }
-        foreach ($this->notification_user_role_ids() as $user_role_id) {
-            $users = array_merge($users, get_role_users($user_role_id, $context, $include_higher_contexts_for_other_users));
+        foreach ($this->notification_user_role_ids() as $userroleid) {
+            $users = array_merge($users, get_role_users($userroleid, $context, $includehighercontextsforotherusers));
         }
         return $users;
     }
@@ -486,8 +485,8 @@ class CourseDeletion {
 
         if (is_null($this->notification_user_role_ids)) {
             $this->notification_user_role_ids = array();
-            foreach ($this->notification_user_role_names as $role_name) {
-                if ($role = $DB->get_record('role', array('shortname' => $role_name))) {
+            foreach ($this->notification_user_role_names as $rolename) {
+                if ($role = $DB->get_record('role', array('shortname' => $rolename))) {
                     $this->notification_user_role_ids [] = array($role->id);
                 }
             }
@@ -528,6 +527,7 @@ class CourseDeletion {
         global $DB;
         // For now, not wrapping this is a transaction, because the chance of failure is too high,
         // and the result of a course not being deleted is not tragic.
+        // @codingStandardsIgnoreLine .
         // $transaction = $DB->start_delegated_transaction();
         $deleted = array();
         foreach ($delrecords as $rec) {
@@ -537,6 +537,7 @@ class CourseDeletion {
                 self::log($rec, 'course_delete_error', "Failed to delete course $rec->courseid");
             }
         }
+        // @codingStandardsIgnoreLine .
         // $transaction->allow_commit();
         return $deleted;
     }
@@ -561,22 +562,22 @@ class CourseDeletion {
     }
 
     /**
-     * Updates records to have enddate to be $set_to_timestamp if endate is less than $expected_min_timestamp.
+     * Updates records to have enddate to be $settotimestamp if endate is less than $expectedmintimestamp.
      * Any updated records are saved to the database.
      *
      * This is done to avoid the course being staged for deletion right after the mail_will_be_staged notification
      * was sent, in case the cron job had not been running for a few days or weeks.
      *
      * @param array $records db records of local_coursedeletion
-     * @param $expected_min_timestamp
+     * @param $expectedmintimestamp
      * @return array
      */
-    protected function reset_enddates($records, $expected_min_timestamp, $set_to_timestamp) {
+    protected function reset_enddates($records, $expectedmintimestamp, $settotimestamp) {
         global $DB;
         foreach ($records as $record) {
-            if ($record->enddate < $expected_min_timestamp) {
-                $message = "enddate_too_old, reset (c: $record->courseid): $record->enddate -> $set_to_timestamp";
-                $record->enddate = $set_to_timestamp;
+            if ($record->enddate < $expectedmintimestamp) {
+                $message = "enddate_too_old, reset (c: $record->courseid): $record->enddate -> $settotimestamp";
+                $record->enddate = $settotimestamp;
                 $DB->update_record('local_coursedeletion', $record);
                 $this->out($message);
                 self::log($record, 'settings_update', $message);
@@ -653,34 +654,34 @@ class CourseDeletion {
     /**
      * Calculates date on which the date will be moved the deletion staging category.
      *
-     * @param int $enddate_timestamp unix timestamp
+     * @param int $enddatetimestamp unix timestamp
      * @return DateTime
      */
-    public static function date_course_will_be_staged_for_deletion($enddate_timestamp) {
-        return self::midnight(null, $enddate_timestamp);
+    public static function date_course_will_be_staged_for_deletion($enddatetimestamp) {
+        return self::midnight(null, $enddatetimestamp);
     }
 
     /**
      * Calculates date on which the course will be deleted.
      *
-     * @param int $enddate_timestamp unix timestamp
+     * @param int $enddatetimestamp unix timestamp
      * @return DateTime
      */
-    public static function date_course_will_be_deleted($enddate_timestamp) {
-        $staged = self::date_course_will_be_staged_for_deletion($enddate_timestamp);
+    public static function date_course_will_be_deleted($enddatetimestamp) {
+        $staged = self::date_course_will_be_staged_for_deletion($enddatetimestamp);
         return $staged->add(self::interval_before_deletion());
     }
 
-    public static function first_notification_date($enddate_timestamp) {
-        $staged = self::date_course_will_be_staged_for_deletion($enddate_timestamp);
+    public static function first_notification_date($enddatetimestamp) {
+        $staged = self::date_course_will_be_staged_for_deletion($enddatetimestamp);
         return $staged->sub(self::interval_until_staging());
     }
 
-    public static function today_is_in_notification_before_staging_period($enddate_timestamp) {
-        $notification_timestamp = self::first_notification_date($enddate_timestamp)->getTimestamp();
-        $staging_timestamp = self::date_course_will_be_staged_for_deletion($enddate_timestamp)->getTimestamp();
+    public static function today_is_in_notification_before_staging_period($enddatetimestamp) {
+        $notificationtimestamp = self::first_notification_date($enddatetimestamp)->getTimestamp();
+        $stagingtimestamp = self::date_course_will_be_staged_for_deletion($enddatetimestamp)->getTimestamp();
         $today = self::midnight_timestamp();
-        return $today > $notification_timestamp && $today < $staging_timestamp;
+        return $today > $notificationtimestamp && $today < $stagingtimestamp;
     }
 
 
@@ -722,7 +723,7 @@ class CourseDeletion {
             $date->setTimestamp($time);
         }
 
-        $date->setTime(0,0,0);
+        $date->setTime(0, 0, 0);
 
         if (is_null($interval)) {
             return $date;
@@ -731,11 +732,11 @@ class CourseDeletion {
     }
 
     /**
-     * @param int|null $unix_timestamp
+     * @param int|null $unixtimestamp
      * @return DateTime
      */
-    public static function midnight_before_timestamp($unix_timestamp = null) {
-        return self::midnight(null, $unix_timestamp);
+    public static function midnight_before_timestamp($unixtimestamp = null) {
+        return self::midnight(null, $unixtimestamp);
     }
 
     /**
@@ -780,14 +781,14 @@ class CourseDeletion {
     }
 
     /**
-     * @param $new_timestamp
+     * @param $newtimestamp
      * @param $status
      * @return array
      * @throws UnexpectedValueException
      */
-    public static function minimum_settable_enddate($new_timestamp, $old_timestamp, $status) {
+    public static function minimum_settable_enddate($newtimestamp, $oldtimestamp, $status) {
 
-        $timestamp = $new_timestamp;
+        $timestamp = $newtimestamp;
         switch ($status) {
             case self::STATUS_NOT_SCHEDULED:
                 // If not enabled, store anything - the date provided in the form to re-enable will always
@@ -796,19 +797,19 @@ class CourseDeletion {
             case self::STATUS_SCHEDULED:
                 // Don't set the date so far back that the full normal notification period is cut short.
                 $minimum = self::midnight(self::interval_until_staging())->add(self::interval('P1D'))->getTimestamp();
-                $timestamp = max($new_timestamp, $minimum);
+                $timestamp = max($newtimestamp, $minimum);
                 break;
             case self::STATUS_SCHEDULED_NOTIFIED:
                 // A first notification mail was already sent.
                 // Don't set the date further back than the currently set enddate.  This enforces
                 // that the full notification period elapses before phase 3 is entered.
-                $timestamp = max($new_timestamp, $old_timestamp);
+                $timestamp = max($newtimestamp, $oldtimestamp);
                 break;
             case self::STATUS_STAGED_FOR_DELETION:
                 // Don't set the date so far back that the full normal notification period is cut short.
                 // This enforces that the course is not deleted earlier than someone expects it to be (unless
                 // someone *manually* deletes the course).
-                $timestamp = max($new_timestamp, $old_timestamp);
+                $timestamp = max($newtimestamp, $oldtimestamp);
                 break;
             default:
                 throw new UnexpectedValueException("Unrecognized status ($status)");
@@ -816,11 +817,12 @@ class CourseDeletion {
         }
         return array(
             $timestamp,
-            $timestamp != $new_timestamp  // bool: was it adjusted to a later date?
+            $timestamp != $newtimestamp  // Bool: was it adjusted to a later date? .
         );
     }
 
     public static function log($coursedeletion, $action, $info = null) {
+        // @codingStandardsIgnoreLine .
         // add_to_log($coursedeletion->courseid, 'coursedeletion', $action, '', $info, 0, $relateduserid);
         $data = array(
             'objectid' => $coursedeletion->id,
@@ -831,6 +833,7 @@ class CourseDeletion {
             $data['other'] = array('detail' => $info);
         }
 
+        // @codingStandardsIgnoreLine .
         /* @var \core\event\base @classname */
         $classname = 'local_coursedeletion\event\\' . $action;
 
@@ -851,40 +854,42 @@ class CourseDeletion {
             'trigger_mail' => null
         );
 
-        $is_staged_for_deletion = $cd->course_is_in_deletion_staging_category($coursedeletion->courseid);
+        $isstagedfordeletion = $cd->course_is_in_deletion_staging_category($coursedeletion->courseid);
         if ($formvalues->scheduledeletion) {
-            $scheduled_changed_to_yes = false;
+            $scheduledchangedtoyes = false;
             if ($coursedeletion->status == self::STATUS_NOT_SCHEDULED) {
                 $info['changes']['do_delete'] = 'do_delete: no to yes';
-                $scheduled_changed_to_yes = true;
+                $scheduledchangedtoyes = true;
             }
 
             // If the course is already staged for deletion, send another mail with the recalculated date
             // and leave the status as-is.
             // If not yet staged, set the status to scheduled for staging deletion (if anything changed).
-            if ($is_staged_for_deletion) {
+            if ($isstagedfordeletion) {
                 $coursedeletion->status = self::STATUS_STAGED_FOR_DELETION;
                 $info['changes']['status'] = 'status: staged_for_deletion, mail resent';
-            } else if ($scheduled_changed_to_yes) {
+            } else if ($scheduledchangedtoyes) {
                 $coursedeletion->status = self::STATUS_SCHEDULED;
                 $info['changes']['status'] = 'status: scheduled';
             }
 
-            list ($enddate, $minimum_date_was_forced) = self::minimum_settable_enddate($formvalues->deletionstagedate, $coursedeletion->enddate, $coursedeletion->status);
-            if ($minimum_date_was_forced) {
+            list ($enddate, $minimumdatewasforced) = self::minimum_settable_enddate(
+                $formvalues->deletionstagedate, $coursedeletion->enddate, $coursedeletion->status
+            );
+            if ($minimumdatewasforced) {
                 $info['minimum_date_forced'] = $enddate;
             }
-            $enddate_changed = $enddate != $coursedeletion->enddate;
+            $enddatechanged = $enddate != $coursedeletion->enddate;
 
-            if ($is_staged_for_deletion) {
-                if ($enddate_changed) {
+            if ($isstagedfordeletion) {
+                if ($enddatechanged) {
                     $info['trigger_mail'] = self::MAIL_WILL_SOON_BE_DELETED;
                 }
 
             } else {
                 if ($coursedeletion->status == self::STATUS_SCHEDULED_NOTIFIED) {
                     if (self::today_is_in_notification_before_staging_period($enddate)) {
-                        if ($enddate_changed) {
+                        if ($enddatechanged) {
                             $info['trigger_mail'] = self::MAIL_WILL_BE_STAGED_FOR_DELETION;
                         }
                     } else {

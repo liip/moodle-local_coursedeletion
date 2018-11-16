@@ -56,36 +56,36 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $cd = new CourseDeletion();
         $this->testcourse = create_course($this->default_course_data('testtest'));
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
-        $base_enddate = CourseDeletion::midnight(null, $rec->enddate);
+        $baseenddate = CourseDeletion::midnight(null, $rec->enddate);
         $formvalues = $this->form_values_from_coursedeletion_record($rec);
 
         // Setting the enddate back one week should work
-        $enddate = clone($base_enddate);
-        $new_enddate = $enddate->sub(CourseDeletion::interval('P1W'))->getTimestamp();
-        $formvalues->deletionstagedate = $new_enddate;
+        $enddate = clone($baseenddate);
+        $newenddate = $enddate->sub(CourseDeletion::interval('P1W'))->getTimestamp();
+        $formvalues->deletionstagedate = $newenddate;
         CourseDeletion::update_from_form($rec, $formvalues, $cd);
-        $this->assertEquals($new_enddate, $rec->enddate, "enddate set to requested value");
+        $this->assertEquals($newenddate, $rec->enddate, "enddate set to requested value");
 
         // Setting the enddate forward one month should work
-        $enddate = clone($base_enddate);
-        $new_enddate = $enddate->add(CourseDeletion::interval('P1M'))->getTimestamp();
-        $formvalues->deletionstagedate = $new_enddate;
+        $enddate = clone($baseenddate);
+        $newenddate = $enddate->add(CourseDeletion::interval('P1M'))->getTimestamp();
+        $formvalues->deletionstagedate = $newenddate;
         CourseDeletion::update_from_form($rec, $formvalues, $cd);
-        $this->assertEquals($new_enddate, $rec->enddate, "enddate set to requested value");
+        $this->assertEquals($newenddate, $rec->enddate, "enddate set to requested value");
 
         // Setting the enddate back to a date earlier than the date that when the expiry
         // notification mail would be sent:
         // * minimum date should be enforced
         // * enddate should be set so that phase 2 will be entered on the next day
-        $new_enddate = CourseDeletion::midnight(CourseDeletion::interval_until_staging())
+        $newenddate = CourseDeletion::midnight(CourseDeletion::interval_until_staging())
             ->sub(CourseDeletion::interval('P1W'))->getTimestamp();
-        $expected_enddate = CourseDeletion::midnight(CourseDeletion::interval_until_staging())
+        $expectedenddate = CourseDeletion::midnight(CourseDeletion::interval_until_staging())
             ->add(CourseDeletion::interval('P1D'))->getTimestamp();
-        $formvalues->deletionstagedate = $new_enddate;
+        $formvalues->deletionstagedate = $newenddate;
         $info = CourseDeletion::update_from_form($rec, $formvalues, $cd);
         $this->assertNotEmpty($info['minimum_date_forced'], "minimum_date_forced should be set to a unix timestamp");
-        $this->assertEquals($expected_enddate, $rec->enddate,
-            "enddate: expected: " . strftime('%Y-%m-%d', $expected_enddate) . ", actual: " . strftime('%Y-%m-%d', $rec->enddate)
+        $this->assertEquals($expectedenddate, $rec->enddate,
+            "enddate: expected: " . strftime('%Y-%m-%d', $expectedenddate) . ", actual: " . strftime('%Y-%m-%d', $rec->enddate)
         );
     }
 
@@ -97,13 +97,13 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $cd = new CourseDeletion(null, 0);
 
         $this->testcourse = create_course($this->default_course_data('testtest'));
-        $base_rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
+        $baserec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
 
         // setup: make today be seven days before deletion staging and adjust status
-        $base_enddate = CourseDeletion::midnight(CourseDeletion::interval_until_staging())
+        $baseenddate = CourseDeletion::midnight(CourseDeletion::interval_until_staging())
             ->sub(CourseDeletion::interval('P1W'));
-        $base_rec->enddate = $base_enddate->getTimestamp();
-        $base_rec->status = CourseDeletion::STATUS_SCHEDULED_NOTIFIED;
+        $baserec->enddate = $baseenddate->getTimestamp();
+        $baserec->status = CourseDeletion::STATUS_SCHEDULED_NOTIFIED;
 
         // Test update to a past date.
         //
@@ -111,15 +111,15 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         // * enddate should not change
         // * status should remain STATUS_SCHEDULED_NOTIFIED
         // * no mail should be triggered
-        $rec = clone($base_rec);
-        $enddate = clone($base_enddate);
+        $rec = clone($baserec);
+        $enddate = clone($baseenddate);
         $formvalues = $this->form_values_from_coursedeletion_record($rec);
-        $old_endate = $rec->enddate;
+        $oldendate = $rec->enddate;
         $formvalues->deletionstagedate = $enddate->sub(CourseDeletion::interval('P3M'))->getTimestamp();
         $info = CourseDeletion::update_from_form($rec, $formvalues, $cd);
         $this->assertNotEmpty($info['minimum_date_forced'], "minimum_date_forced should be set to a unix timestamp (2)");
         $this->assertEquals(CourseDeletion::STATUS_SCHEDULED_NOTIFIED, $rec->status, "Past");
-        $this->assertEquals($old_endate, $rec->enddate, "Date not changed");
+        $this->assertEquals($oldendate, $rec->enddate, "Date not changed");
         $this->assertEmpty($info['trigger_mail'], "No mail should be triggered");
 
         // Test update to a future date that is before the current end date.
@@ -128,15 +128,15 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         // * enddate should not change
         // * status should remain STATUS_SCHEDULED_NOTIFIED
         // * no mail should be triggered
-        $rec = clone($base_rec);
-        $enddate = clone($base_enddate);
+        $rec = clone($baserec);
+        $enddate = clone($baseenddate);
         $formvalues = $this->form_values_from_coursedeletion_record($rec);
-        $old_endate = $rec->enddate;
+        $oldendate = $rec->enddate;
         $formvalues->deletionstagedate = $enddate->sub(CourseDeletion::interval('P3D'))->getTimestamp();
         $info = CourseDeletion::update_from_form($rec, $formvalues, $cd);
         $this->assertNotEmpty($info['minimum_date_forced'], "minimum_date_forced should be set to a unix timestamp");
         $this->assertEquals(CourseDeletion::STATUS_SCHEDULED_NOTIFIED, $rec->status, "Near future");
-        $this->assertEquals($old_endate, $rec->enddate, "Date not changed");
+        $this->assertEquals($oldendate, $rec->enddate, "Date not changed");
         $this->assertEmpty($info['trigger_mail'], "No mail should be triggered");
 
         // Test update to a future date that is after the current end date, but less
@@ -145,44 +145,44 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         // * enddate should be set to requested end date
         // * status should still be STATUS_SCHEDULED_NOTIFIED
         // * mail should be triggered
-        $rec = clone($base_rec);
+        $rec = clone($baserec);
         $formvalues = $this->form_values_from_coursedeletion_record($rec);
-        $new_enddate = CourseDeletion::date_course_will_be_staged_for_deletion($rec->enddate)->add(CourseDeletion::interval('P1D'))->getTimestamp();
-        $formvalues->deletionstagedate = $new_enddate;
+        $newenddate = CourseDeletion::date_course_will_be_staged_for_deletion($rec->enddate)->add(CourseDeletion::interval('P1D'))->getTimestamp();
+        $formvalues->deletionstagedate = $newenddate;
         $info = CourseDeletion::update_from_form($rec, $formvalues, $cd);
         $this->assertEquals($rec->status, CourseDeletion::STATUS_SCHEDULED_NOTIFIED, "Near future 2");
         $this->assertEquals(CourseDeletion::MAIL_WILL_BE_STAGED_FOR_DELETION, $info['trigger_mail'], "Mail would be triggered");
-        $this->assertEquals($new_enddate, $rec->enddate,
-            sprintf("enddate: requested: %s, actual: %s", strftime('%Y-%m-%d', $new_enddate), strftime('%Y-%m-%d', $rec->enddate)));
+        $this->assertEquals($newenddate, $rec->enddate,
+            sprintf("enddate: requested: %s, actual: %s", strftime('%Y-%m-%d', $newenddate), strftime('%Y-%m-%d', $rec->enddate)));
 
         // Test update to a future date that is after the current end date, and at least
         // <number of days in phase 2> in the future.
         //
         // * enddate should be set to requested end date
         // * status should be set to STATUS_SCHEDULED
-        $rec = clone($base_rec);
+        $rec = clone($baserec);
         $formvalues = $this->form_values_from_coursedeletion_record($rec);
-        $new_enddate = CourseDeletion::date_course_will_be_staged_for_deletion($rec->enddate)
+        $newenddate = CourseDeletion::date_course_will_be_staged_for_deletion($rec->enddate)
             ->add(CourseDeletion::interval_until_staging())->add(CourseDeletion::interval('P2D'))->getTimestamp();
-        $formvalues->deletionstagedate = $new_enddate;
+        $formvalues->deletionstagedate = $newenddate;
         $info = CourseDeletion::update_from_form($rec, $formvalues, $cd);
-        $this->assertEquals($new_enddate, $rec->enddate,
-            sprintf("enddate: requested: %s, actual: %s", strftime('%Y-%m-%d', $new_enddate), strftime('%Y-%m-%d', $rec->enddate)));
+        $this->assertEquals($newenddate, $rec->enddate,
+            sprintf("enddate: requested: %s, actual: %s", strftime('%Y-%m-%d', $newenddate), strftime('%Y-%m-%d', $rec->enddate)));
         $this->assertEquals($rec->status, CourseDeletion::STATUS_SCHEDULED, "Far future: status should be reset to scheduled");
 
         // Setting the enddate back to a date earlier than the date that when the expiry
         // notification mail would be sent:
         // * minimum date should be enforced
         // * enddate should be set so that phase 2 will be entered on the next day
-        $new_enddate = CourseDeletion::midnight(CourseDeletion::interval_until_staging())
+        $newenddate = CourseDeletion::midnight(CourseDeletion::interval_until_staging())
             ->sub(CourseDeletion::interval('P1W'))->getTimestamp();
-        $expected_enddate = CourseDeletion::midnight(CourseDeletion::interval_until_staging())
+        $expectedenddate = CourseDeletion::midnight(CourseDeletion::interval_until_staging())
             ->add(CourseDeletion::interval('P1D'))->getTimestamp();
-        $formvalues->deletionstagedate = $new_enddate;
+        $formvalues->deletionstagedate = $newenddate;
         $info = CourseDeletion::update_from_form($rec, $formvalues, $cd);
         $this->assertNotEmpty($info['minimum_date_forced'], "minimum_date_forced should be set to a unix timestamp");
-        $this->assertEquals($expected_enddate, $rec->enddate,
-            "enddate: expected: " . strftime('%Y-%m-%d', $expected_enddate) . ", actual: " . strftime('%Y-%m-%d', $rec->enddate)
+        $this->assertEquals($expectedenddate, $rec->enddate,
+            "enddate: expected: " . strftime('%Y-%m-%d', $expectedenddate) . ", actual: " . strftime('%Y-%m-%d', $rec->enddate)
         );
     }
 
@@ -194,13 +194,13 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $cd = new CourseDeletion(null, 0);
 
         $this->testcourse = create_course($this->default_course_data('testtest'));
-        $base_rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
+        $baserec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
 
         // setup: make today be seven days before final deletion
-        $base_enddate = CourseDeletion::midnight(CourseDeletion::interval_before_deletion(true))
+        $baseenddate = CourseDeletion::midnight(CourseDeletion::interval_before_deletion(true))
             ->add(CourseDeletion::interval('P1W'));
-        $base_rec->enddate = $base_enddate->getTimestamp();
-        $base_rec->status = CourseDeletion::STATUS_STAGED_FOR_DELETION;
+        $baserec->enddate = $baseenddate->getTimestamp();
+        $baserec->status = CourseDeletion::STATUS_STAGED_FOR_DELETION;
 
         // put the course in the deletion staging category
         move_courses(array($this->testcourse->id), $cd->deletion_staging_category_id());
@@ -209,32 +209,32 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         // * status should stay as STATUS_STAGED_FOR_DELETION
         // * mail should be triggered
         // * new date should be accepted
-        $rec = clone($base_rec);
-        $enddate = clone($base_enddate);
+        $rec = clone($baserec);
+        $enddate = clone($baseenddate);
         $formvalues = $this->form_values_from_coursedeletion_record($rec);
-        $new_enddate = $enddate->add(CourseDeletion::interval('P3M'))->getTimestamp();
-        $formvalues->deletionstagedate = $new_enddate;
+        $newenddate = $enddate->add(CourseDeletion::interval('P3M'))->getTimestamp();
+        $formvalues->deletionstagedate = $newenddate;
         $info = CourseDeletion::update_from_form($rec, $formvalues, $cd);
         $this->assertEquals(CourseDeletion::STATUS_STAGED_FOR_DELETION, $rec->status, "Future");
         $this->assertEquals('mail_will_be_deleted_soon', $info['trigger_mail'], "Mail would be triggered");
-        $this->assertEquals($new_enddate, $rec->enddate,
-            sprintf("enddate: requested: %s, actual: %s", strftime('%Y-%m-%d', $new_enddate), strftime('%Y-%m-%d', $rec->enddate)));
+        $this->assertEquals($newenddate, $rec->enddate,
+            sprintf("enddate: requested: %s, actual: %s", strftime('%Y-%m-%d', $newenddate), strftime('%Y-%m-%d', $rec->enddate)));
 
         // Test update to a date before the current end date
         // * status should stay as STATUS_STAGED_FOR_DELETION
         // * no mail should be triggered
         // * enddate should not change
-        $rec = clone($base_rec);
-        $enddate = clone($base_enddate);
+        $rec = clone($baserec);
+        $enddate = clone($baseenddate);
         $formvalues = $this->form_values_from_coursedeletion_record($rec);
-        $old_enddate = $rec->enddate;
-        $new_enddate = $enddate->sub(CourseDeletion::interval('P2D'))->getTimestamp();
-        $formvalues->deletionstagedate = $new_enddate;
+        $oldenddate = $rec->enddate;
+        $newenddate = $enddate->sub(CourseDeletion::interval('P2D'))->getTimestamp();
+        $formvalues->deletionstagedate = $newenddate;
         $info = CourseDeletion::update_from_form($rec, $formvalues, $cd);
         $this->assertEquals(CourseDeletion::STATUS_STAGED_FOR_DELETION, $rec->status, "Past");
-        $this->assertEquals($old_enddate, $rec->enddate,
+        $this->assertEquals($oldenddate, $rec->enddate,
             sprintf("enddate should not change: requested: %s, actual: %s, previous: %s",
-                strftime('%Y-%m-%d', $new_enddate), strftime('%Y-%m-%d', $rec->enddate), strftime('%Y-%m-%d', $old_enddate)));
+                strftime('%Y-%m-%d', $newenddate), strftime('%Y-%m-%d', $rec->enddate), strftime('%Y-%m-%d', $oldenddate)));
         $this->assertEmpty($info['trigger_mail'], "No mail should be triggered");
 
     }
@@ -251,8 +251,8 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
 
         // setup: make today be seven days after deletion staging and adjust status
-        $base_enddate = CourseDeletion::midnight(CourseDeletion::interval('P1W', true));
-        $rec->enddate = $base_enddate->getTimestamp();
+        $baseenddate = CourseDeletion::midnight(CourseDeletion::interval('P1W', true));
+        $rec->enddate = $baseenddate->getTimestamp();
         $rec->status = CourseDeletion::STATUS_STAGED_FOR_DELETION;
         $DB->update_record('local_coursedeletion', $rec);
 
@@ -277,8 +277,8 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
 
         // setup: make today be seven days after deletion date and adjust status
-        $base_enddate = CourseDeletion::midnight(CourseDeletion::interval_before_deletion(true))->sub(CourseDeletion::interval('P1W'));
-        $rec->enddate = $base_enddate->getTimestamp();
+        $baseenddate = CourseDeletion::midnight(CourseDeletion::interval_before_deletion(true))->sub(CourseDeletion::interval('P1W'));
+        $rec->enddate = $baseenddate->getTimestamp();
         $rec->status = CourseDeletion::STATUS_NOT_SCHEDULED;
 
         // put the course in the deletion staging category
@@ -304,29 +304,29 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $this->run_cron();
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEquals(CourseDeletion::STATUS_SCHEDULED_NOTIFIED, $rec->status, "Status was changed to notified");
-        $expected_enddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_until_staging());
-        $this->assertEquals($expected_enddate, $rec->enddate,
-            sprintf("enddate: expected: %s, actual: %s", strftime('%Y-%m-%d', $expected_enddate), strftime('%Y-%m-%d', $rec->enddate)));
+        $expectedenddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_until_staging());
+        $this->assertEquals($expectedenddate, $rec->enddate,
+            sprintf("enddate: expected: %s, actual: %s", strftime('%Y-%m-%d', $expectedenddate), strftime('%Y-%m-%d', $rec->enddate)));
 
         // When the end of phase 2 is reached:
         // * course status -> staged_for_deletion
         // * course is moved to trash category
         // * full notification period remains before course is scheduled for deletion
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
-        $new_enddate = CourseDeletion::midnight_timestamp();
-        $rec->enddate = $new_enddate;
+        $newenddate = CourseDeletion::midnight_timestamp();
+        $rec->enddate = $newenddate;
         $DB->update_record('local_coursedeletion', $rec);
         $this->run_cron();
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEquals(CourseDeletion::STATUS_STAGED_FOR_DELETION, $rec->status, "Status was changed to staged");
-        $this->assertEquals($new_enddate, $rec->enddate,
-            sprintf("enddate: expected: %s, actual: %s", strftime('%Y-%m-%d', $new_enddate), strftime('%Y-%m-%d', $rec->enddate)));
+        $this->assertEquals($newenddate, $rec->enddate,
+            sprintf("enddate: expected: %s, actual: %s", strftime('%Y-%m-%d', $newenddate), strftime('%Y-%m-%d', $rec->enddate)));
 
         // When the end of phase 3 is reached:
         // course is deleted
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
-        $new_enddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_before_deletion(true));
-        $rec->enddate = $new_enddate;
+        $newenddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_before_deletion(true));
+        $rec->enddate = $newenddate;
         $DB->update_record('local_coursedeletion', $rec);
         $this->run_cron();
         $course = $DB->get_record('course', array('id' => $rec->courseid));
@@ -352,24 +352,24 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $this->run_cron();
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEquals(CourseDeletion::STATUS_SCHEDULED_NOTIFIED, $rec->status, "Status was changed to notified");
-        $expected_enddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_until_staging());
-        $this->assertEquals($expected_enddate, $rec->enddate,
-            sprintf("enddate: expected: %s, actual: %s", strftime('%Y-%m-%d', $expected_enddate), strftime('%Y-%m-%d', $rec->enddate)));
+        $expectedenddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_until_staging());
+        $this->assertEquals($expectedenddate, $rec->enddate,
+            sprintf("enddate: expected: %s, actual: %s", strftime('%Y-%m-%d', $expectedenddate), strftime('%Y-%m-%d', $rec->enddate)));
 
         // When the end of phase 2 is reached:
         // * course status -> staged_for_deletion
         // * course is moved to trash category
         // * enddate should be today
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
-        $new_enddate = CourseDeletion::midnight(CourseDeletion::interval_before_deletion(true))->sub(CourseDeletion::interval('P1M'));
-        $expected_enddate = CourseDeletion::midnight_timestamp();
-        $rec->enddate = $new_enddate->getTimestamp();
+        $newenddate = CourseDeletion::midnight(CourseDeletion::interval_before_deletion(true))->sub(CourseDeletion::interval('P1M'));
+        $expectedenddate = CourseDeletion::midnight_timestamp();
+        $rec->enddate = $newenddate->getTimestamp();
         $DB->update_record('local_coursedeletion', $rec);
         $this->run_cron();
         $rec = $DB->get_record('local_coursedeletion', array('courseid' => $this->testcourse->id));
         $this->assertEquals(CourseDeletion::STATUS_STAGED_FOR_DELETION, $rec->status, "Status was changed to staged");
-        $this->assertEquals($expected_enddate, $rec->enddate,
-            sprintf("enddate: expected: %s, actual: %s", strftime('%Y-%m-%d', $expected_enddate), strftime('%Y-%m-%d', $rec->enddate)));
+        $this->assertEquals($expectedenddate, $rec->enddate,
+            sprintf("enddate: expected: %s, actual: %s", strftime('%Y-%m-%d', $expectedenddate), strftime('%Y-%m-%d', $rec->enddate)));
     }
 
     public function setUp() {
