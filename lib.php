@@ -41,7 +41,6 @@ function local_coursedeletion_extend_navigation_course  (navigation_node $parent
         return;
     }
 
-
     $label = get_string('coursedeletionsettings', 'local_coursedeletion');
     $url = new moodle_url('/local/coursedeletion/coursesettings.php', array('id' => $PAGE->course->id));
     $newnode = navigation_node::create(
@@ -56,5 +55,5 @@ function local_coursedeletion_extend_navigation_course  (navigation_node $parent
         $newnode->make_active();
     }
     $parentnode->add_node($newnode);
-    
+
 }

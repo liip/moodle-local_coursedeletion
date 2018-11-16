@@ -6,7 +6,7 @@ require_once(__DIR__ . '/locallib.php');
 
 $id = required_param('id', PARAM_INT);
 
-$PAGE->set_url('/local/coursedeletion/coursesettings.php', array('id'=>$id));
+$PAGE->set_url('/local/coursedeletion/coursesettings.php', array('id' => $id));
 
 if (! $course = $DB->get_record("course", array('id' => $id))) {
     print_error('invalidcourseid');
@@ -16,9 +16,9 @@ require_course_login($course);
 // This script is only meant to be used for testing / debugging purposes.
 // If someone should be able to access it, define in config.php a value like:
 //
-//    $CFG->local_coursedeletion_force_users = 12;
+// $CFG->local_coursedeletion_force_users = 12;
 // or
-//    $CFG->local_coursedeletion_force_users = '12,99,102';
+// $CFG->local_coursedeletion_force_users = '12,99,102';
 //
 // where the numbers are user ids of the users who shall be permitted access.
 

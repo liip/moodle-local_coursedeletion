@@ -28,7 +28,7 @@ require_once(__DIR__ . '/locallib.php');
 
 $id = required_param('id', PARAM_INT);
 
-$PAGE->set_url('/local/coursedeletion/coursesettings.php', array('id'=>$id));
+$PAGE->set_url('/local/coursedeletion/coursesettings.php', array('id' => $id));
 
 if (! $course = $DB->get_record("course", array('id' => $id))) {
     print_error('invalidcourseid');
@@ -85,12 +85,12 @@ if ($form = $mform->get_data()){
     $cd = new CourseDeletion();
     $info = CourseDeletion::update_from_form($coursedeletion, $form, $cd);
     if (!is_null($info['minimum_date_forced'])) {
-        $flash[]= get_string('minimum_date_was_forced', 'local_coursedeletion');
+        $flash[] = get_string('minimum_date_was_forced', 'local_coursedeletion');
         $mform->force_end_date($info['minimum_date_forced']);
     }
     if (!is_null($info['trigger_mail'])) {
         $cd->send_mail_to_notification_users(array($coursedeletion), $info['trigger_mail']);
-        $flash[]= get_string('mail_sent', 'local_coursedeletion');
+        $flash[] = get_string('mail_sent', 'local_coursedeletion');
     }
 
     if (count($info['changes'])) {

@@ -122,7 +122,6 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($old_endate, $rec->enddate, "Date not changed");
         $this->assertEmpty($info['trigger_mail'], "No mail should be triggered");
 
-
         // Test update to a future date that is before the current end date.
         // to near future date:
         // * minimum date should be forced
@@ -238,7 +237,6 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
                 strftime('%Y-%m-%d', $new_enddate), strftime('%Y-%m-%d', $rec->enddate), strftime('%Y-%m-%d', $old_enddate)));
         $this->assertEmpty($info['trigger_mail'], "No mail should be triggered");
 
-
     }
 
 
@@ -310,7 +308,6 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($expected_enddate, $rec->enddate,
             sprintf("enddate: expected: %s, actual: %s", strftime('%Y-%m-%d', $expected_enddate), strftime('%Y-%m-%d', $rec->enddate)));
 
-
         // When the end of phase 2 is reached:
         // * course status -> staged_for_deletion
         // * course is moved to trash category
@@ -358,7 +355,6 @@ class CourseDeletionTest extends PHPUnit_Framework_TestCase {
         $expected_enddate = CourseDeletion::midnight_timestamp(CourseDeletion::interval_until_staging());
         $this->assertEquals($expected_enddate, $rec->enddate,
             sprintf("enddate: expected: %s, actual: %s", strftime('%Y-%m-%d', $expected_enddate), strftime('%Y-%m-%d', $rec->enddate)));
-
 
         // When the end of phase 2 is reached:
         // * course status -> staged_for_deletion

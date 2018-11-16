@@ -183,7 +183,6 @@ class CourseDeletion {
 
         $this->out('reset_status_for_unstaged_courses start');
 
-
         $delstagecontext = context_coursecat::instance($this->deletion_staging_category_id);
         $sql = "
           SELECT lcd.*
@@ -194,7 +193,7 @@ class CourseDeletion {
              AND ctx.path NOT LIKE :stage_cat_ctx_path
         ";
         $params = array(
-            'status_staged' => CourseDeletion::STATUS_STAGED_FOR_DELETION,
+            'status_staged' => self::STATUS_STAGED_FOR_DELETION,
             'contextlevel' => CONTEXT_COURSE,
             'stage_cat_ctx_path' => "$delstagecontext->path/%"
         );
@@ -202,8 +201,8 @@ class CourseDeletion {
 
         if (count($unstaged)) {
             list($in, $params) = $DB->get_in_or_equal(array_keys($unstaged), SQL_PARAMS_NAMED);
-            $params['status_scheduled'] = CourseDeletion::STATUS_SCHEDULED;
-            $params['enddate'] = CourseDeletion::default_course_end_date();
+            $params['status_scheduled'] = self::STATUS_SCHEDULED;
+            $params['enddate'] = self::default_course_end_date();
             $sql = "
                 UPDATE {local_coursedeletion} lcd
                    SET status = :status_scheduled,
@@ -281,7 +280,7 @@ class CourseDeletion {
         $params = array(self::STATUS_SCHEDULED_NOTIFIED, $expected_end_date);
         if ($courseid) {
             $sql .= " AND lcd.courseid = ?";
-            $params[]= $courseid;
+            $params[] = $courseid;
         }
         if ($records = $DB->get_records_sql($sql, $params)) {
             $records = $this->reset_enddates($records, $expected_end_date, $expected_end_date);
@@ -407,10 +406,10 @@ class CourseDeletion {
                     ))->trigger();
                 }
                 else {
-                  if ($mailtype === self::MAIL_WILL_BE_STAGED_FOR_DELETION || $mailtype === self::MAIL_WILL_SOON_BE_DELETED) {
-                    // SUP-7120 write one log entry for each mail warning sent
-                    self::log($rec, 'workflow_notify', 'user ' . $user->email . ' notified with ' . $mailtype);
-                  }
+                    if ($mailtype === self::MAIL_WILL_BE_STAGED_FOR_DELETION || $mailtype === self::MAIL_WILL_SOON_BE_DELETED) {
+                        // SUP-7120 write one log entry for each mail warning sent
+                        self::log($rec, 'workflow_notify', 'user ' . $user->email . ' notified with ' . $mailtype);
+                    }
                 }
             }
         }
@@ -425,12 +424,11 @@ class CourseDeletion {
                 } else {
                     $mailfrom = new stdClass;
 
-                    # Avoid debugging message:
+                    // Avoid debugging message:
                     $all_user_name_fields = get_all_user_name_fields();
                     foreach ($all_user_name_fields as $fieldname) {
                         $mailfrom->$fieldname = '';
                     }
-
 
                     $mailfrom->maildisplay = 1;
                     $mailfrom->lastname = '';
@@ -488,9 +486,10 @@ class CourseDeletion {
 
         if (is_null($this->notification_user_role_ids)) {
             $this->notification_user_role_ids = array();
-            foreach ($this->notification_user_role_names as $role_name)
-            if ($role = $DB->get_record('role', array('shortname' => $role_name))) {
-                $this->notification_user_role_ids []= array($role->id);
+            foreach ($this->notification_user_role_names as $role_name) {
+                if ($role = $DB->get_record('role', array('shortname' => $role_name))) {
+                    $this->notification_user_role_ids [] = array($role->id);
+                }
             }
         }
 
@@ -529,16 +528,16 @@ class CourseDeletion {
         global $DB;
         // For now, not wrapping this is a transaction, because the chance of failure is too high,
         // and the result of a course not being deleted is not tragic.
-        //$transaction = $DB->start_delegated_transaction();
+        // $transaction = $DB->start_delegated_transaction();
         $deleted = array();
         foreach ($delrecords as $rec) {
             if (delete_course($rec->courseid, false)) {
-                $deleted[]= $rec;
+                $deleted[] = $rec;
             } else {
                 self::log($rec, 'course_delete_error', "Failed to delete course $rec->courseid");
             }
         }
-        //$transaction->allow_commit();
+        // $transaction->allow_commit();
         return $deleted;
     }
 
@@ -815,14 +814,14 @@ class CourseDeletion {
                 throw new UnexpectedValueException("Unrecognized status ($status)");
                 break;
         }
-    return array(
+        return array(
             $timestamp,
             $timestamp != $new_timestamp  // bool: was it adjusted to a later date?
         );
     }
 
     public static function log($coursedeletion, $action, $info = null) {
-        //add_to_log($coursedeletion->courseid, 'coursedeletion', $action, '', $info, 0, $relateduserid);
+        // add_to_log($coursedeletion->courseid, 'coursedeletion', $action, '', $info, 0, $relateduserid);
         $data = array(
             'objectid' => $coursedeletion->id,
             'courseid' => $coursedeletion->courseid,
@@ -855,8 +854,8 @@ class CourseDeletion {
         $is_staged_for_deletion = $cd->course_is_in_deletion_staging_category($coursedeletion->courseid);
         if ($formvalues->scheduledeletion) {
             $scheduled_changed_to_yes = false;
-            if ($coursedeletion->status == CourseDeletion::STATUS_NOT_SCHEDULED) {
-                $info['changes']['do_delete']= 'do_delete: no to yes';
+            if ($coursedeletion->status == self::STATUS_NOT_SCHEDULED) {
+                $info['changes']['do_delete'] = 'do_delete: no to yes';
                 $scheduled_changed_to_yes = true;
             }
 
@@ -864,10 +863,10 @@ class CourseDeletion {
             // and leave the status as-is.
             // If not yet staged, set the status to scheduled for staging deletion (if anything changed).
             if ($is_staged_for_deletion) {
-                $coursedeletion->status = CourseDeletion::STATUS_STAGED_FOR_DELETION;
-                $info['changes']['status']= 'status: staged_for_deletion, mail resent';
+                $coursedeletion->status = self::STATUS_STAGED_FOR_DELETION;
+                $info['changes']['status'] = 'status: staged_for_deletion, mail resent';
             } else if ($scheduled_changed_to_yes) {
-                $coursedeletion->status = CourseDeletion::STATUS_SCHEDULED;
+                $coursedeletion->status = self::STATUS_SCHEDULED;
                 $info['changes']['status'] = 'status: scheduled';
             }
 
@@ -879,39 +878,39 @@ class CourseDeletion {
 
             if ($is_staged_for_deletion) {
                 if ($enddate_changed) {
-                    $info['trigger_mail'] = CourseDeletion::MAIL_WILL_SOON_BE_DELETED;
+                    $info['trigger_mail'] = self::MAIL_WILL_SOON_BE_DELETED;
                 }
 
             } else {
-                if ($coursedeletion->status == CourseDeletion::STATUS_SCHEDULED_NOTIFIED) {
+                if ($coursedeletion->status == self::STATUS_SCHEDULED_NOTIFIED) {
                     if (self::today_is_in_notification_before_staging_period($enddate)) {
                         if ($enddate_changed) {
-                            $info['trigger_mail'] = CourseDeletion::MAIL_WILL_BE_STAGED_FOR_DELETION;
+                            $info['trigger_mail'] = self::MAIL_WILL_BE_STAGED_FOR_DELETION;
                         }
                     } else {
                         // Reset the status to scheduled if:
                         // not yet staged for deletion, but already notified, and the date has been pushed out beyond
                         // the new notification period.
                         $info['changes']['status'] = "status: $coursedeletion->status -> scheduled";
-                        $coursedeletion->status = CourseDeletion::STATUS_SCHEDULED;
+                        $coursedeletion->status = self::STATUS_SCHEDULED;
                     }
 
                 }
 
             }
         } else {
-            if ($coursedeletion->status != CourseDeletion::STATUS_NOT_SCHEDULED) {
-                $info['changes']['do_delete']= 'do_delete: yes to no';
-                $coursedeletion->status = CourseDeletion::STATUS_NOT_SCHEDULED;
+            if ($coursedeletion->status != self::STATUS_NOT_SCHEDULED) {
+                $info['changes']['do_delete'] = 'do_delete: yes to no';
+                $coursedeletion->status = self::STATUS_NOT_SCHEDULED;
             }
             $enddate = $formvalues->deletionstagedate;
         }
 
         if ($coursedeletion->enddate != $enddate) {
             $info['changes']['enddate'] = 'enddate: ' .
-                CourseDeletion::midnight_before_timestamp($coursedeletion->enddate)->format('d.m.Y') .
+                self::midnight_before_timestamp($coursedeletion->enddate)->format('d.m.Y') .
                 ' to ' .
-                CourseDeletion::midnight_before_timestamp($enddate)->format('d.m.Y');
+                self::midnight_before_timestamp($enddate)->format('d.m.Y');
             $coursedeletion->enddate = $enddate;
         }
 
