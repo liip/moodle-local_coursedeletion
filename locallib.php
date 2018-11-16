@@ -101,7 +101,7 @@ class CourseDeletion {
         if (is_null($deletionstagingcategoryid)) {
             $deletionstagingcategoryid = get_config('local_coursedeletion', 'deletion_staging_category_id');
         }
-        $this->deletion_staging_category_id = $deletionstagingcategoryid;
+        $this->deletionstagingcategoryid = $deletionstagingcategoryid;
         $this->verbosity = $verbosity;
     }
 
@@ -109,19 +109,19 @@ class CourseDeletion {
      * Lazy instantiation of course category
      */
     protected function staging_category() {
-        if (is_null($this->deletion_staging_category)) {
-            $this->deletion_staging_category = coursecat::get($this->deletion_staging_category_id);
+        if (is_null($this->deletionstagingcategory)) {
+            $this->deletionstagingcategory = coursecat::get($this->deletionstagingcategoryid);
         }
     }
 
     public function deletion_staging_category_id() {
-        return $this->deletion_staging_category_id;
+        return $this->deletionstagingcategoryid;
     }
 
     public function course_is_in_deletion_staging_category($courseid) {
         global $DB;
 
-        $delstagecontext = context_coursecat::instance($this->deletion_staging_category_id);
+        $delstagecontext = context_coursecat::instance($this->deletionstagingcategoryid);
 
         $sql = "
             SELECT 1
@@ -183,7 +183,7 @@ class CourseDeletion {
 
         $this->out('reset_status_for_unstaged_courses start');
 
-        $delstagecontext = context_coursecat::instance($this->deletion_staging_category_id);
+        $delstagecontext = context_coursecat::instance($this->deletionstagingcategoryid);
         $sql = "
           SELECT lcd.*
             FROM {local_coursedeletion} lcd
@@ -311,7 +311,7 @@ class CourseDeletion {
 
         $this->out('delete_courses start');
 
-        $delstagecontext = context_coursecat::instance($this->deletion_staging_category_id);
+        $delstagecontext = context_coursecat::instance($this->deletionstagingcategoryid);
 
         $time = self::timestamp_for_courses_needing_deletion();
 
@@ -415,11 +415,11 @@ class CourseDeletion {
     }
 
     protected function email_from_user() {
-        if (is_null($this->email_from_user)) {
+        if (is_null($this->emailfromuser)) {
             $conf = get_config('local_coursedeletion');
             if ($conf) {
                 if (!$conf->mailfrom_address) {
-                    $this->email_from_user = get_admin();
+                    $this->emailfromuser = get_admin();
                 } else {
                     $mailfrom = new stdClass;
 
@@ -437,13 +437,13 @@ class CourseDeletion {
                     } else {
                         $mailfrom->firstname = "No-Reply";
                     }
-                    $this->email_from_user = $mailfrom;
+                    $this->emailfromuser = $mailfrom;
                 }
             } else {
-                $this->email_from_user = get_admin();
+                $this->emailfromuser = get_admin();
             }
         }
-        return $this->email_from_user;
+        return $this->emailfromuser;
     }
 
     protected function contact_url() {
@@ -471,28 +471,28 @@ class CourseDeletion {
     protected function course_teacher_role_ids() {
         global $DB;
 
-        if (is_null($this->course_teacher_role_ids)) {
+        if (!isset($this->courseteacherroleids)) {
             if ($role = $DB->get_record('role', array('shortname' => 'editingteacher'))) {
-                $this->course_teacher_role_ids = array($role->id);
+                $this->courseteacherroleids = array($role->id);
             }
         }
 
-        return $this->course_teacher_role_ids;
+        return $this->courseteacherroleids;
     }
 
     protected function notification_user_role_ids() {
         global $DB;
 
-        if (is_null($this->notification_user_role_ids)) {
-            $this->notification_user_role_ids = array();
-            foreach ($this->notification_user_role_names as $rolename) {
+        if (!isset($this->notificationuserroleids)) {
+            $this->notificationuserroleids = array();
+            foreach ($this->notificationuserrolenames as $rolename) {
                 if ($role = $DB->get_record('role', array('shortname' => $rolename))) {
-                    $this->notification_user_role_ids [] = array($role->id);
+                    $this->notificationuserroleids[] = $role->id;
                 }
             }
         }
 
-        return $this->notification_user_role_ids;
+        return $this->notificationuserroleids;
     }
 
     /**

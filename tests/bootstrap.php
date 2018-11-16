@@ -21,8 +21,6 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 // usage: phpunit --no-configuration --bootstrap=tests/bootstrap.php `pwd`/tests/CourseDeletionTest
 define('CLI_SCRIPT', true);
 
